@@ -1,0 +1,50 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "go build -o c5exporter -v && ls -l c5exporter",
+      "detail": "Create a dynamically linked build",
+      "group": "build"
+    },
+    {
+      "label": "Build static",
+      "type": "shell",
+      "command": "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags '-s -w' -o c5exporter main.go && ls -l c5exporter",
+      "detail": "Create a static build for Linux AMD64",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+    },
+    {
+      "label": "Test all",
+      "type": "shell",
+      "command": "go test -count=1 ./...",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "detail": "Run all test files"
+    },
+    {
+      "label": "Build tagged release distribution packages",
+      "type": "shell",
+      "command": "goreleaser release --skip-publish --rm-dist",
+      "group": "build",
+      "detail": "Build a debian package based on the latest Git tag",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build snapshot distribution packages",
+      "type": "shell",
+      "command": "goreleaser release --snapshot --rm-dist",
+      "group": "build",
+      "detail": "Build a debian package from the current snapshot",
+      "problemMatcher": []
+    }
+  ]
+}
