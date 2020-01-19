@@ -1,0 +1,199 @@
+#!/bin/sh 
+
+### BEGIN INIT INFO
+# Provides:          prometheus-c5-exporter
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the prometheus-c5-exporter daemon
+# Description:       Prometheus C5 exporter is a metrics provider for C5 application processes
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=prometheus-c5-exporter
+DESC="Prometheus C5 exporter (${NAME})"
+DAEMON=/usr/local/bin/$NAME
+DAEMON_OPTS="-config=/etc/prometheus-c5-exporter.conf"
+PIDDIR=/var/run/${NAME}
+PIDFILE=$PIDDIR/${NAME}.pid
+LOGDIR=/var/log/${NAME}
+LOGFILE=$LOGDIR/${NAME}.out
+RUNAS=prometheus
+
+# Include daemon defaults if available
+if [ -f /etc/default/${NAME} ]; then
+	. /etc/default/${NAME}
+fi
+
+if [ ! -x $DAEMON ]; then
+	echo "Please verify daemon, $DAEMON not found"
+	exit 1
+fi
+
+if [ ! -d $PIDDIR ]; then
+	echo "Creating PID directory $PIDDIR for user $RUNAS"
+	mkdir -p $PIDDIR
+	chown $RUNAS $PIDDIR
+fi
+if [ ! -d $LOGDIR ]; then
+	echo "Creating log directory $LOGDIR for user $RUNAS"
+	mkdir -p $LOGDIR
+	chown $RUNAS $LOGDIR
+fi
+
+set -e
+
+. /lib/lsb/init-functions
+
+_start() {
+	# Check if the ULIMIT is set in /etc/default/nginx
+	_status
+	if [ 0"$PID" -gt 1 ]; then
+		echo "$DESC already running ($PID)"
+		return 0
+	fi
+	if [ -n "$ULIMIT" ]; then
+		# Set the ulimits
+		ulimit $ULIMIT
+	fi
+	if [ ! -z "$RUNAS" ]; then
+		echo "Starting daemon $DAEMON as $RUNAS"
+		# su - $RUNAS -c "$DAEMON $DAEMON_OPTS"
+		start-stop-daemon -v --start --oknodo --user $RUNAS --name $RUNAS \
+		   --no-close --make-pidfile \
+                   --chuid $RUNAS \
+                   --pidfile $PIDFILE --exec $DAEMON -b -- $DAEMON_OPTS >$LOGFILE 2>&1
+                #    --chuid $RUNAS -- --daemon
+		echo $! >$PIDFILE
+	else
+		echo "Starting daemon $DAEMON"
+		start-stop-daemon --start --oknodo --name $RUNAS \
+                   --pidfile $PIDFILE --exec $DAEMON -b -- $DAEMON_OPTS
+		# $DAEMON $DAEMON_OPTS
+		echo $! >$PIDFILE
+	fi
+	sleep 1
+	_status
+	if [ 0"$PID" -gt 1 ]; then
+		echo "$DESC running ($PID)"
+		return 0
+	else
+		echo "$DESC is not running"
+		return 1
+	fi
+}
+
+_stop() {
+	if [ -n "$ULIMIT" ]; then
+		# Set the ulimits
+		ulimit $ULIMIT
+	fi
+	_status
+	rc=0
+	if [ 0"$PID" -gt 1 ]; then
+		echo "Stopping $DESC ($PID)"
+		kill $PID
+		sleep 1
+		if [ ! -d "/proc/$PID" -a -f $PIDFILE ]; then
+			rm -f $PIDFILE
+		fi
+		_status
+	else
+		if [ -f $PIDFILE ]; then
+			echo "  Remove stale pidfile $PIDFILE"
+			rm -f $PIDFILE
+		fi
+		echo "$DESC not running"
+		return 0
+	fi
+	try=0
+	while [ $try -lt 10 -a "0$PID" -gt 1 ]; do
+		echo "  Sending TERM signal to $DAEMON ($PID)"
+		kill $PID
+		sleep 1
+		_status
+	done
+	if [ "0$PID" -gt 1 ]; then
+		echo "  Forcing stop for pid $PID (kill)"
+		kill -9 $PID
+		rc=1
+	fi
+	if [ -f $PIDFILE ]; then
+		echo "  Forcing remove of pidfile $PIDFILE"
+		rm $PIDFILE
+		rc=1
+	fi
+	return $rc
+}
+
+_status() {
+	# status_of_proc -p /var/run/$NAME.pid "$DAEMON" ${NAME} && exit 0 || exit $?
+	PID=
+	RPID=
+	if [ ! -r $PIDFILE ]; then
+		return 0
+	fi
+	RPID=`cat $PIDFILE`
+	
+	PS=`cat /proc/$RPID/cmdline 2>/dev/null | tr "\0" " "`
+	set -- $PS
+	if [ "${1##*/}" = "$NAME" ]; then
+		PID=$RPID
+	elif [ -z "$PS" ]; then
+		echo "No process running with pid $RPID"
+	else
+		echo "Detected other process running with pid $RPID"
+	fi
+}
+
+_reload() {
+	_status
+	if [ ! 0"$PID" > 1 ]; then
+		echo "Not running, cannot reload"
+	fi
+	echo "Sending signal HUP to process id $PID to reload"
+	kill -HUP $PID
+	return $?
+}
+
+case "$1" in
+	start)
+		echo "Starting $DESC"
+		_start
+		;;
+
+	stop)
+		echo "Stopping $DESC"
+		_stop
+		;;
+
+	restart|force-reload)
+		echo "Restarting $DESC"
+		_stop
+		sleep 1
+		_start
+		;;
+
+	reload)
+		echo "Reloading $DESC configuration"
+		_reload
+		;;
+
+	status)
+		_status
+		if [ 0"$PID" -gt 1 ]; then
+			echo "$DESC running ($PID)"
+			exit 0
+		else
+			echo "$DESC is not running"
+			exit 1
+		fi
+		;;
+	*)
+		echo "Usage: $NAME {start|stop|restart|reload|status}" >&2
+		exit 1
+		;;
+esac
+
+exit 0

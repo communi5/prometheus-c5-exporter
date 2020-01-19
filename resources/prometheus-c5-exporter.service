@@ -1,0 +1,14 @@
+[Unit]
+Description=Prometheus C5 exporter is a metrics provider for C5 application processes
+Documentation=https://git.neotel.at/neotel/c5-exporter
+After=network-online.target
+
+[Service]
+User=prometheus
+# Restart on failure, wait 15s between restarts
+Restart=on-failure
+RestartSec=15
+ExecStart=/usr/bin/prometheus-c5-exporter --config=/etc/prometheus-c5-exporter.conf
+
+[Install]
+WantedBy=multi-user.target

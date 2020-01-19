@@ -1,0 +1,72 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+builds:
+  - binary: prometheus-c5-exporter
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      # - darwin
+    goarch:
+      - amd64
+archives:
+  - replacements:
+      # linux: Linux
+      # windows: Windows
+      # amd64: x86_64
+    #files:
+    #  - README.md
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ .Tag }}-snapshot"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+release:
+  disable: true
+nfpms:
+  - # ID of the nfpm config, must be unique.
+    # Defaults to "default".
+
+    # You can change the name of the package.
+    # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}`
+    # name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+    vendor: NeoTel Telefonservice GmbH & Co KG
+    homepage: https://git.neotel.at/neotel/c5-exporter
+    maintainer: Roland Lammel <rl@neotel.at>
+    description: A prometheus exporter for C5 application processes
+    license: Commercial
+
+    formats:
+      - deb
+    #  - rpm
+
+    scripts:
+      # preinstall: "resources/scripts/preinstall.sh"
+      postinstall: "resources/scripts/postinstall.sh"
+      # preremove: "resources/scripts/preremove.sh"
+      # postremove: "resources/scripts/postremove.sh"
+
+    bindir: /usr/bin
+
+    files:
+      "resources/prometheus-c5-exporter.service": "/usr/lib/systemd/system/prometheus-c5-exporter.service"
+      "resources/prometheus-c5-exporter.initd": "/etc/init.d/prometheus-c5-exporter"
+      "README.md": "/usr/share/doc/prometheus-c5-exporter/README.md"
+      "resources/rsyslog.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
+      "resources/logrotate.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
+      # "prometheus-c5-exporter.conf.example": "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
+
+    # Config files to add to your package. They are about the same as
+    # the files keyword, except package managers treat them differently
+    # config_files:
+    #  "c5-exporter.conf.example": "/etc/c5-exporter.conf"
