@@ -51,12 +51,14 @@ type usageCounter struct {
 }
 
 type c5Response struct {
-	ProxyState    string        // "proxyState" : "active",
-	BuildVersion  string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
-	StartupTime   string        // "startupTime" : "2020-01-19 04:01:04.503",
-	MemoryUsage   string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
-	TuQueueStatus string        // "tuQueueStatus" : "OK - checked: 1830",
-	CounterInfos  []interface{} // "counterInfos": [ ... ]
+	ProxyState     string        // "proxyState" : "active", // sipproxyd only
+	QueueState     string        // "queueState" : "active", // acdqueued only
+	RegistrarState string        // "proxyState" : "active", // registar only
+	BuildVersion   string        `json:"buildVersion:"` // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
+	StartupTime    string        `json:"startupTime:"`  // "startupTime" : "2020-01-19 04:01:04.503",
+	MemoryUsage    string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
+	TuQueueStatus  string        // "tuQueueStatus" : "OK - checked: 1830",
+	CounterInfos   []interface{} // "counterInfos": [ ... ]
 }
 
 func buildMetricName(prefix string, name string, idx *int) string {
@@ -115,6 +117,75 @@ func parseInt64(str string) int64 {
 
 func parseUint64(str string) uint64 {
 	return uint64(parseInt64(str))
+}
+
+func parseBuildString(build string) (version string) {
+	// "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
+	parts := strings.Split(build, ",")
+	version = strings.TrimPrefix(parts[0], "Version: ")
+	return
+}
+
+func parseDataSize(str string) uint64 {
+	unit := strings.TrimLeft(str, "0123456789")
+	size := parseUint64(strings.TrimSuffix(str, unit))
+	switch strings.ToLower(unit) {
+	case "kb":
+		return size * 1024
+	case "mb":
+		return size * 1024 * 1024
+	case "gb":
+		return size * 1024 * 1024 * 1024
+	case "tb":
+		return size * 1024 * 1024 * 1024 * 1024
+	}
+	return size
+}
+
+func parseMemoryString(build string) (memUsed, memTotal, memMaxUsage uint64) {
+	// "memoryUsage" : "C5 Heap Health: OK  - Mem used: 18%  - Mem used: 383MB  - Mem total: 2048MB  - Max: 18% - UpdCtr: 60793",
+	parts := strings.Split(build, "-")
+	for _, p := range parts {
+		param := strings.SplitN(strings.TrimSpace(p), ":", 2)
+		log.Println("Parsing memory part", p, param)
+		key := strings.ToLower(strings.TrimSpace(param[0]))
+		switch key {
+		case "mem used":
+			if !strings.HasSuffix(key, "%") { // Need the first "mem used" as percent param
+				memUsed = parseDataSize(strings.TrimSpace(param[1]))
+			}
+		case "mem total":
+			memTotal = parseDataSize(strings.TrimSpace(param[1]))
+		case "max":
+			memMaxUsage = parseUint64(strings.TrimSuffix(strings.TrimSpace(param[1]), "%"))
+		}
+	}
+	return
+}
+
+func parseProcessStateString(state ...string) uint64 {
+	for _, s := range state {
+		// Skip the state only if empty
+		if s != "" {
+			// Otherwise return active=1, inactive=0 or
+			// 2 for all other unknown states
+			switch s {
+			case "active":
+				return 1
+			case "inactive":
+				return 0
+			}
+			return 2
+		}
+	}
+	return 3
+}
+
+func parseQueueStateString(state string) uint64 {
+	if strings.HasPrefix(state, "OK") {
+		return 1
+	}
+	return 0
 }
 
 func parseUsageCounter(line string) usageCounter {
@@ -216,7 +287,23 @@ func processC5Counter(prefix string, lines []interface{}) {
 }
 
 func processBaseMetrics(prefix string, state c5Response) {
-	// TODO, parse memory, proxystate, ...
+	// Set build version in info string
+	version := parseBuildString(state.BuildVersion)
+	log.Println("Parsed version and startuptime: ", version, state.StartupTime, state.BuildVersion)
+	setMetricValue(prefix+`_info{version="`+parseBuildString(state.BuildVersion)+`",starttime="`+state.StartupTime+`"}`, 1)
+
+	// Set process/queue states (usually active=1 or inactive=0)
+	setMetricValue(prefix+`_state`, parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState))
+	setMetricValue(prefix+`_tu_queue_state`, parseQueueStateString(state.TuQueueStatus))
+
+	// Set process state (usually active=1 or inactive=0)
+	memUsed, memTotal, memMaxUsage := parseMemoryString(state.MemoryUsage)
+	setMetricValue(prefix+`_memory_used_bytes`, memUsed)
+	setMetricValue(prefix+`_memory_total_bytes`, memTotal)
+	setMetricValue(prefix+`_memory_max_used_percent`, memMaxUsage)
+
+	// TODO: Parse more variables
+	// "startupTime:" : "2020-01-19 04:11:08.288",
 }
 
 func fetchMetrics(prefix, url string) {
