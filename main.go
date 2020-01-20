@@ -12,7 +12,7 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 const listen = ":9055"
 
 // Register various time series.
