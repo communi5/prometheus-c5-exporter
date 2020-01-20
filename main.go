@@ -85,9 +85,9 @@ func setUsageMetric(prefix string, metric usageCounter) {
 	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
 	setMetricValue(current, metric.Current)
 	lastMin := buildMetricName(prefix, metric.Name+"_lastmin", metric.Idx)
-	setMetricValue(lastMin, metric.LastMax)
+	setMetricValue(lastMin, metric.LastMin)
 	lastAvg := buildMetricName(prefix, metric.Name+"_lastavg", metric.Idx)
-	setMetricValue(lastAvg, metric.LastMax)
+	setMetricValue(lastAvg, metric.LastAvg)
 	lastMax := buildMetricName(prefix, metric.Name+"_lastmax", metric.Idx)
 	setMetricValue(lastMax, metric.LastMax)
 }
@@ -126,8 +126,8 @@ func parseUsageCounter(line string) usageCounter {
 		Name:    parts[1],
 		Current: parseUint64(parts[2]),
 		LastMin: parseUint64(parts[5]),
-		LastAvg: parseUint64(parts[6]),
-		LastMax: parseUint64(parts[7]),
+		LastMax: parseUint64(parts[6]),
+		LastAvg: parseUint64(parts[7]),
 	}
 }
 
@@ -157,8 +157,8 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 					Idx:     &idx,
 					Current: parseUint64(parts[0]),
 					LastMin: parseUint64(parts[3]),
-					LastAvg: parseUint64(parts[4]),
-					LastMax: parseUint64(parts[5]),
+					LastMax: parseUint64(parts[4]),
+					LastAvg: parseUint64(parts[5]),
 				})
 		}
 	}
