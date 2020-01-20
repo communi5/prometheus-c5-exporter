@@ -12,6 +12,9 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
+const version = "0.1.0"
+const listen = ":9055"
+
 // Register various time series.
 // Time series name may contain labels in Prometheus format - see below.
 var (
@@ -173,7 +176,7 @@ func parseEventCounter(line string) eventCounter {
 	}
 }
 
-func processC5Counter(prefix string, lines []interface{}) string {
+func processC5Counter(prefix string, lines []interface{}) {
 	isGauge := false
 	for _, line := range lines {
 		v := reflect.ValueOf(line)
@@ -208,9 +211,12 @@ func processC5Counter(prefix string, lines []interface{}) string {
 			}
 			// log.Println("line", line, "isGauge", isGauge)
 		}
-
 	}
-	return ""
+	return
+}
+
+func processBaseMetrics(prefix string, state c5Response) {
+	// TODO, parse memory, proxystate, ...
 }
 
 func fetchMetrics(prefix, url string) {
@@ -227,6 +233,10 @@ func fetchMetrics(prefix, url string) {
 	if err != nil {
 		log.Println("Failed to parse, err: ", err)
 	}
+	// process base information
+	processBaseMetrics(prefix, c5state)
+
+	// process event and usage counters now
 	processC5Counter(prefix, c5state.CounterInfos)
 }
 
@@ -244,8 +254,8 @@ func main() {
 		metrics.WritePrometheus(w, true)
 	})
 
-	log.Println("Starting c5exporter on port 9055")
-	log.Fatal(http.ListenAndServe(":9055", nil))
+	log.Printf("Starting c5exporter v%s on port %s", version, listen)
+	log.Fatal(http.ListenAndServe(listen, nil))
 }
 
 // Example response
