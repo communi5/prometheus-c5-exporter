@@ -6,13 +6,14 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/VictoriaMetrics/metrics"
 )
 
-const version = "0.2.0"
+const version = "0.2.1"
 const listen = ":9055"
 
 var (
@@ -129,16 +130,25 @@ func parseDataSize(str string) uint64 {
 	return size
 }
 
-func parseMemoryString(build string) (memUsed, memTotal, memMaxUsage uint64) {
-	// "memoryUsage" : "C5 Heap Health: OK  - Mem used: 18%  - Mem used: 383MB  - Mem total: 2048MB  - Max: 18% - UpdCtr: 60793",
-	parts := strings.Split(build, "-")
+func parseMemoryString(memoryUsage string) (memUsed, memTotal, memMaxUsage uint64) {
+	// R6.0: "memoryUsage" : "C5 Heap Health: OK  - Mem used: 18%  - Mem used: 383MB  - Mem total: 2048MB  - Max: 18% - UpdCtr: 60793",
+	// R6.2: "memoryUsage" : "C5 Heap Health: OK  - Mem used: 3%  76MB  (min: 76 max: 76)  - Mem total: 2048MB  - MAX: 3% - UpdCtr: 92205",
+	parts := strings.Split(memoryUsage, "-")
 	for _, p := range parts {
 		param := strings.SplitN(strings.TrimSpace(p), ":", 2)
-		log.Println("Parsing memory part", p, param)
+		// log.Println("Parsing memory part", p, param)
 		key := strings.ToLower(strings.TrimSpace(param[0]))
 		switch key {
 		case "mem used":
-			if !strings.HasSuffix(key, "%") { // Need the first "mem used" as percent param
+			if strings.HasSuffix(param[1], "%") { // Need the first "mem used" as percent param
+				continue
+			}
+			if strings.Contains(param[1], "%") { // probably R6.2
+				// log.Println("Parse memused R6.2", param[1])
+				memparts := strings.Fields(param[1])
+				memUsed = parseDataSize(memparts[1])
+			} else {
+				// log.Println("Parse memused R6.0", param[1])
 				memUsed = parseDataSize(strings.TrimSpace(param[1]))
 			}
 		case "mem total":
@@ -147,6 +157,19 @@ func parseMemoryString(build string) (memUsed, memTotal, memMaxUsage uint64) {
 			memMaxUsage = parseUint64(strings.TrimSuffix(strings.TrimSpace(param[1]), "%"))
 		}
 	}
+	return
+}
+
+func parseMemoryStringRegex(memoryUsage string) (memUsed, memTotal, memMaxUsage uint64) {
+	// R6.0: "memoryUsage" : "C5 Heap Health: OK  - Mem used: 18%  - Mem used: 383MB  - Mem total: 2048MB  - Max: 18% - UpdCtr: 60793",
+	// R6.2: "memoryUsage" : "C5 Heap Health: OK  - Mem used: 3%  76MB  (min: 76 max: 76)  - Mem total: 2048MB  - MAX: 3% - UpdCtr: 92205",
+	memRegex := regexp.MustCompile(`(?i)mem used:(?: *\d+%)? *(\d+[tgmkb]*) .* mem total: *(\d+[tgmkb]*).* max: *(\d+)%`)
+	matches := memRegex.FindStringSubmatch(memoryUsage)
+	if len(matches) > 1 {
+		// log.Println("matches:", matches[1:4])
+		return parseDataSize(matches[1]), parseDataSize(matches[2]), parseUint64(matches[3])
+	}
+	log.Println("Failed to parse memory usage:", memoryUsage)
 	return
 }
 
@@ -315,7 +338,6 @@ var acdQueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"
 var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 
 func main() {
-
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		fetchMetrics("sipproxyd", sipproxydURL)
@@ -327,90 +349,3 @@ func main() {
 	log.Printf("Starting c5exporter v%s on port %s", version, listen)
 	log.Fatal(http.ListenAndServe(listen, nil))
 }
-
-// Example response
-// {
-// 	"proxyResponseTimeStampAndState:" : "2020-01-19 11:40:01  active",
-// 	"proxyState" : "active",
-// 	"buildVersion:" : "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
-// 	"startupTime:" : "2020-01-19 04:01:04.503",
-// 	"memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
-// 	"tuQueueStatus" : "OK - checked: 1830",
-// 	"counterInfos" : [
-// 	  "       Event counters                              absolute   curr   last",
-// 	  "  0 TRANSPORT_MESSAGE_IN                              6502      0     72",
-// 	  "  1 TRANSPORT_MESSAGE_OUT                             7088      0     79",
-// 	  "253 TRANSPORT_TCP_MESSAGE_IN                             0      0      0",
-// 	  "254 TRANSPORT_TCP_MESSAGE_OUT                            0      0      0",
-// 	  "  2 REQUEST_METHOD_INVITE_IN                             0      0      0",
-// 	  "  6 REQUEST_METHOD_SUBSCRIBE_IN                        334      0      5",
-// 	  " 30 REQUEST_METHOD_NOOP_IN                            4964      0     54",
-// 	  "  9 REQUEST_METHOD_NOTIFY_OUT                           39      0      0",
-// 	  " 52 CALL_CONTROL_ORIG_CALL_SETUP_SUCCESS                 0      0      0",
-// 	  " 54 CALL_CONTROL_ORIG_CALL_FAST_CONNECTED                0      0      0",
-// 	  " 53 CALL_CONTROL_ORIG_CALL_CONNECTED                     0      0      0",
-// 	  " 47 CALL_CONTROL_ORIG_CLIENT_ERROR                       0      0      0",
-// 	  " 48 CALL_CONTROL_ORIG_SERVER_ERROR                       0      0      0",
-// 	  " 49 CALL_CONTROL_ORIG_GLOBAL_ERROR                       0      0      0",
-// 	  " 50 CALL_CONTROL_ORIG_REDIRECTION                        0      0      0",
-// 	  " 51 CALL_CONTROL_ORIG_AUTHENTICATION_REQUIRED            0      0      0",
-// 	  "190 OVERLOAD_PROTECTION_LIMIT_REACHED                    0      0      0",
-// 	  "214 OVERLOAD_HEAP_WARNING_REJECTED_IN_REQUESTS           0      0      0",
-// 	  "215 OVERLOAD_HEAP_CRITICAL_REJECTED_IN_REQUESTS          0      0      0",
-// 	  "191 OVERLOAD_LIMIT1_REJECTED_IN_REQUESTS                 0      0      0",
-// 	  "192 OVERLOAD_LIMIT2_REJECTED_IN_REQUESTS                 0      0      0",
-// 	  "193 OVERLOAD_LIMIT3_REJECTED_IN_REQUESTS                 0      0      0",
-// 	  "194 OVERLOAD_LIMIT4_REJECTED_IN_REQUESTS                 0      0      0",
-// 	  "367 CALLS_LIMIT_REACHED                                  0      0      0",
-// 	  "368 BT_CALLS_LIMIT_REACHED                               0      0      0",
-// 	  "369 USER_CALLS_LIMIT_REACHED                             0      0      0",
-// 	  " 46 CALL_CONTROL_AUTHENTICATION_ERROR                    0      0      0",
-// 	  "227 CALL_CONTROL_IN_ACL_DENY                             0      0      0",
-// 	  "228 CALL_CONTROL_OUT_ACL_DENY                            0      0      0",
-// 	  "329 IP_FILTER_DENIED                                     0      0      0",
-// 	  "330 IP_FILTER_NOT_ALLOWED                                0      0      0",
-// 	  " 76 PRESENCE_AUTHENTICATION_ERROR                        0      0      0",
-// 	  " 77 TRANSACTION_AND_TU_RETRY_IN                         50      0      0",
-// 	  " 78 TRANSACTION_AND_TU_RETRY_OUT                        46      0      0",
-// 	  " 83 TRANSACTION_AND_TU_CONN_VERIFICATION_RELEASED        0      0      0",
-// 	  " 93 LOCATION_DNS_RESOLVER_ERROR                          0      0      0",
-// 	  " 95 LOCATION_DNS_QUERY_TIMEOUT                           0      0      0",
-// 	  "129 DATABASE_ERRORS                                      6      0      0",
-// 	  "366 DATABASE_NOSQL_ERRORS                                0      0      0",
-// 	  "144 ROUTING_ERRORS                                       0      0      0",
-// 	  "177 SNMP_REQUESTS                                      908      0     10",
-// 	  "178 SNMP_TRAPS                                           5      0      0",
-// 	  "267 GENERAL_RCC_IN_COMMANDS                              3      0      0",
-// 	  "268 GENERAL_RCC_OUT_COMMANDS                             3      0      0",
-// 	  "350 WS_AGENT_EV_IN                                       0      0      0",
-// 	  "351 WS_AGENT_EV_OUT                                      0      0      0",
-// 	  "352 WS_CALL_EV                                           0      0      0",
-// 	  "360 WS_CALL_SYNC_IN                                      0      0      0",
-// 	  "359 WS_CALL_SYNC_OUT                                     0      0      0",
-// 	  "362 WS_CALL_NOTIFY_IN                                    0      0      0",
-// 	  "361 WS_CALL_NOTIFY_OUT                                   0      0      0",
-// 	  "379 PUSH_CALL_NOTIFY                                     0      0      0",
-// 	  "380 PUSH_CALL_NOTIFY_ERROR                               0      0      0",
-// 	  "       Usage counters                              current    min    max   lMin   lMax   lAvg",
-// 	  " 45 CALL_CONTROL_ACTIVE_CALLS                           0      0      0      0      0      0",
-// 	  "309 BT_ACTIVE_CALLS                                     0      0      0      0      0      0",
-// 	  " 75 PRESENCE_ACTIVE_SUBSCRIPTIONS                       6      6      6      6      6      6",
-// 	  " 82 TRANSACTION_AND_TU_ACTIVE_SESSIONS                  0      0      0      0      0      0",
-// 	  "189 TRANSACTION_AND_TU_ACTIVE_UA_SESSIONS               0      0      0      0      0      0",
-// 	  " 81 TRANSACTION_AND_TU_ACTIVE_TRANSACTION_USERS         0      0      0      0      2      0",
-// 	  "322 TRANSACTION_AND_TU_ACTIVE_INVITE_SERVER             0      0      0      0      0      0",
-// 	  "233 TRANSPORT_TCP_ACTIVE_IN_CONNECTION                  0      0      0      0      0      0",
-// 	  "234 TRANSPORT_TCP_ACTIVE_TRUSTED_IN_CONNECTION          0      0      0      0      0      0",
-// 	  "235 TRANSPORT_TCP_ACTIVE_OUT_CONNECTION                 0      0      0      0      0      0",
-// 	  "236 TRANSPORT_TCP_ACTIVE_TRUSTED_OUT_CONNECTION         0      0      0      0      0      0",
-// 	  "264 GENERAL_RCC_ACTIVE_CONNECTIONS                      0      0      0      0      0      0",
-// 	  "349 WS_CONNECTIONS                                      6      6      6      6      6      6",
-// 	  [
-// 		" 84 TRANSACTION_AND_TU_TU_MANAGER_QUEUE_SIZE          0      0      0      0      0      0",
-// 		"                                                      0      0      0      0      0      0",
-// 		"                                                      0      0      0      0      1      0",
-// 		"                                                      0      0      0      0      0      0",
-// 		"                                                      0      0      0      0      1      0"
-// 	  ]
-// 	]
-// }
