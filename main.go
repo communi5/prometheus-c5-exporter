@@ -15,22 +15,9 @@ import (
 const version = "0.2.0"
 const listen = ":9055"
 
-// Register various time series.
-// Time series name may contain labels in Prometheus format - see below.
 var (
-	// Counter
+	// Map of metrics counter used for exporting metrics
 	counters map[string]*metrics.Counter
-
-	// // Register counter without labels.
-	// requestsTotal = metrics.NewCounter("requests_total")
-	// // Register summary with a single label.
-	// requestDuration = metrics.NewSummary(`requests_duration_seconds{path="/foobar/baz"}`)
-	// // Register gauge with two labels.
-	// queueSize = metrics.NewGauge(`queue_size{queue="foobar",topic="baz"}`, func() float64 {
-	// 	return float64(333)
-	// })
-	// // Register histogram with a single label.
-	// responseSize = metrics.NewHistogram(`response_size{path="/foo/bar"}`)
 )
 
 type eventCounter struct {
@@ -83,7 +70,7 @@ func getCounterMetric(name string) *metrics.Counter {
 }
 
 func setUsageMetric(prefix string, metric usageCounter) {
-	log.Println("set usage metric for ", prefix, metric.Name)
+	// log.Println("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
 	setMetricValue(current, metric.Current)
 	lastMin := buildMetricName(prefix, metric.Name+"_lastmin", metric.Idx)
@@ -95,13 +82,13 @@ func setUsageMetric(prefix string, metric usageCounter) {
 }
 
 func setCounterMetric(prefix string, metric eventCounter) {
-	log.Println("set usage metric for ", prefix, metric.Name)
+	// log.Println("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_total", metric.Idx)
 	setMetricValue(current, metric.Total)
 }
 
 func setMetricValue(name string, value uint64) {
-	log.Println("set metric ", name, "value", value)
+	// log.Println("set metric ", name, "value", value)
 	metrics.GetOrCreateCounter(name).Set(value)
 
 }
@@ -172,7 +159,7 @@ func parseProcessStateString(state ...string) uint64 {
 			switch s {
 			case "active":
 				return 1
-			case "inactive":
+			case "inactive", "passive":
 				return 0
 			}
 			return 2
@@ -301,9 +288,6 @@ func processBaseMetrics(prefix string, state c5Response) {
 	setMetricValue(prefix+`_memory_used_bytes`, memUsed)
 	setMetricValue(prefix+`_memory_total_bytes`, memTotal)
 	setMetricValue(prefix+`_memory_max_used_percent`, memMaxUsage)
-
-	// TODO: Parse more variables
-	// "startupTime:" : "2020-01-19 04:11:08.288",
 }
 
 func fetchMetrics(prefix, url string) {
@@ -311,7 +295,6 @@ func fetchMetrics(prefix, url string) {
 	if err != nil {
 		log.Println("Failed to connect", err)
 		return
-		// panic(err)
 	}
 	defer resp.Body.Close()
 	var c5state c5Response
