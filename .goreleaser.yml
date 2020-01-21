@@ -66,8 +66,7 @@ nfpms:
       "resources/rsyslog.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
       "resources/logrotate.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
       # "prometheus-c5-exporter.conf.example": "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
-
     # Config files to add to your package. They are about the same as
     # the files keyword, except package managers treat them differently
     # config_files:
-    #  "c5-exporter.conf.example": "/etc/c5-exporter.conf"
+    #  "c5-exporter.conf.example": "/etc/prometheus-c5-exporter.conf"
