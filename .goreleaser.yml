@@ -65,6 +65,7 @@ nfpms:
       "README.md": "/usr/share/doc/prometheus-c5-exporter/README.md"
       "resources/rsyslog.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
       "resources/logrotate.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
+      "resources/grafana/dashboard-teles-c5-proxy.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-teles-c5-proxy.json"
       # "prometheus-c5-exporter.conf.example": "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
     # Config files to add to your package. They are about the same as
     # the files keyword, except package managers treat them differently

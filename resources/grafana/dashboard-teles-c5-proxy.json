@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 77,
-  "iteration": 1579611117184,
+  "iteration": 1579699280828,
   "links": [],
   "panels": [
     {
@@ -375,7 +375,7 @@
       "colorValue": false,
       "colors": ["#37872D", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "datasource": "Prometheus",
-      "decimals": 1,
+      "decimals": null,
       "description": "Maximum memory usage through process lifetime",
       "format": "percentunit",
       "gauge": {
@@ -682,7 +682,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sipproxyd_overload_protection_limit_reached_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_protection_limit_reached_total{instance=\"$instance\"} - sipproxyd_overload_protection_limit_reached_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit Reached",
@@ -756,7 +756,7 @@
         "min": false,
         "rightSide": true,
         "show": true,
-        "total": false,
+        "total": true,
         "values": true
       },
       "lines": true,
@@ -776,42 +776,42 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sipproxyd_overload_heap_warning_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_heap_warning_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_heap_warning_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Heap Warning",
           "refId": "A"
         },
         {
-          "expr": "sipproxyd_overload_heap_critical_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_heap_critical_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_heap_critical_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Heap Critical",
           "refId": "B"
         },
         {
-          "expr": "sipproxyd_overload_limit1_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_limit1_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_limit1_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit1 Rejects",
           "refId": "D"
         },
         {
-          "expr": "sipproxyd_overload_limit2_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_limit2_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_limit2_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit2 Rejects",
           "refId": "E"
         },
         {
-          "expr": "sipproxyd_overload_limit3_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_limit3_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_limit3_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit3 Rejects",
           "refId": "F"
         },
         {
-          "expr": "sipproxyd_overload_limit4_rejected_in_requests_total{instance=\"$instance\"}",
+          "expr": "sum(sipproxyd_overload_limit4_rejected_in_requests_total{instance=\"$instance\"} - sipproxyd_overload_limit4_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit4 Rejects",
@@ -2157,8 +2157,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "c5sp2-2:9055",
-          "value": "c5sp2-2:9055"
+          "text": "c5sp4-2:9055",
+          "value": "c5sp4-2:9055"
         },
         "datasource": "Prometheus",
         "definition": "label_values(sipproxyd_transport_message_in_total, instance)",
@@ -2182,7 +2182,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -2203,5 +2203,5 @@
   "timezone": "",
   "title": "TELES C5 Proxy",
   "uid": "KC2Q5msWk",
-  "version": 18
+  "version": 21
 }
