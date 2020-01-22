@@ -13,7 +13,7 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
-const version = "0.2.1"
+const version = "0.2.2"
 const listen = ":9055"
 
 var (
