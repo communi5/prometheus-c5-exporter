@@ -18,10 +18,7 @@ import (
 const version = "0.3.0"
 const listen = ":9055"
 
-var (
-	// Map of metrics counter used for exporting metrics
-	counters map[string]*metrics.Counter
-)
+var metricSet *metrics.Set
 
 type eventCounter struct {
 	ID    string
@@ -62,16 +59,6 @@ func buildMetricName(prefix string, name string, idx *int) string {
 	return name
 }
 
-func getCounterMetric(name string) *metrics.Counter {
-	c, ok := counters[name]
-	if !ok {
-		c = metrics.NewCounter(name)
-
-		counters[name] = c
-	}
-	return c
-}
-
 func setUsageMetric(prefix string, metric usageCounter) {
 	// log.Println("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
@@ -92,8 +79,7 @@ func setCounterMetric(prefix string, metric eventCounter) {
 
 func setMetricValue(name string, value uint64) {
 	// log.Println("set metric ", name, "value", value)
-	metrics.GetOrCreateCounter(name).Set(value)
-
+	metricSet.GetOrCreateCounter(name).Set(value)
 }
 
 func parseInt64(str string) int64 {
@@ -299,16 +285,13 @@ func processC5Counter(prefix string, lines []interface{}) {
 }
 
 func clearMetrics(prefix string) {
-	// ClearMetrics is not possible right now, as victoria metrics does
-	// not allow delete metrics
-	return
-	// log.Println("Clear metric counters for", prefix)
-	// for name := range counters {
-	// 	if strings.HasPrefix(name, prefix) {
-	// 		log.Println("Remove metric counter", name)
-	// 		delete(counters, name)
-	// 	}
-	// }
+	log.Println("Clear metric counters for", prefix)
+	for _, name := range metricSet.ListMetricNames() {
+		if strings.HasPrefix(name, prefix) {
+			log.Println("Unregister metric counter", name)
+			metricSet.UnregisterMetric(name)
+		}
+	}
 }
 
 func processBaseMetrics(prefix string, state c5Response) {
@@ -359,6 +342,7 @@ var acdQueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"
 var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 
 func main() {
+	metricSet = metrics.NewSet()
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
@@ -366,7 +350,7 @@ func main() {
 		go fetchMetrics("acdqueued", acdQueuedURL, &wg)
 		go fetchMetrics("registrard", registrardURL, &wg)
 		wg.Wait()
-		metrics.WritePrometheus(w, true)
+		metrics.WritePrometheusMetricSet(metricSet, w, true)
 	})
 
 	log.Printf("Starting c5exporter v%s on port %s", version, listen)
