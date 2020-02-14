@@ -298,6 +298,19 @@ func processC5Counter(prefix string, lines []interface{}) {
 	return
 }
 
+func clearMetrics(prefix string) {
+	// ClearMetrics is not possible right now, as victoria metrics does
+	// not allow delete metrics
+	return
+	// log.Println("Clear metric counters for", prefix)
+	// for name := range counters {
+	// 	if strings.HasPrefix(name, prefix) {
+	// 		log.Println("Remove metric counter", name)
+	// 		delete(counters, name)
+	// 	}
+	// }
+}
+
 func processBaseMetrics(prefix string, state c5Response) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
@@ -322,6 +335,7 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		log.Println("Failed to connect", err)
+		clearMetrics(prefix)
 		return
 	}
 	defer resp.Body.Close()
@@ -330,7 +344,7 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
 	if err != nil {
 		log.Println("Failed to parse response, err: ", err)
-		log.Println("Failed to parse, err: ", err)
+		clearMetrics(prefix)
 		return
 	}
 	// process base information
