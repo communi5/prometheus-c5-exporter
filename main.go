@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/VictoriaMetrics/metrics"
 )
@@ -299,7 +301,7 @@ func processC5Counter(prefix string, lines []interface{}) {
 func processBaseMetrics(prefix string, state c5Response) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
-	log.Println("Parsed version and startuptime: ", version, state.StartupTime, state.BuildVersion)
+	log.Println("Processed", prefix, version, "started", state.StartupTime, state.BuildVersion)
 	setMetricValue(prefix+`_info{version="`+parseBuildString(state.BuildVersion)+`",starttime="`+state.StartupTime+`"}`, 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
@@ -313,18 +315,23 @@ func processBaseMetrics(prefix string, state c5Response) {
 	setMetricValue(prefix+`_memory_max_used_percent`, memMaxUsage)
 }
 
-func fetchMetrics(prefix, url string) {
-	resp, err := http.Get(url)
+func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+	client := http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
 		log.Println("Failed to connect", err)
 		return
 	}
 	defer resp.Body.Close()
 	var c5state c5Response
-	log.Println("Parsing response body", resp.Body)
+	// log.Println("Parsing response body", resp.Body)
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
 	if err != nil {
+		log.Println("Failed to parse response, err: ", err)
 		log.Println("Failed to parse, err: ", err)
+		return
 	}
 	// process base information
 	processBaseMetrics(prefix, c5state)
@@ -340,9 +347,11 @@ var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 func main() {
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
-		fetchMetrics("sipproxyd", sipproxydURL)
-		fetchMetrics("acdqueued", acdQueuedURL)
-		fetchMetrics("registrard", registrardURL)
+		var wg sync.WaitGroup
+		go fetchMetrics("sipproxyd", sipproxydURL, &wg)
+		go fetchMetrics("acdqueued", acdQueuedURL, &wg)
+		go fetchMetrics("registrard", registrardURL, &wg)
+		wg.Wait()
 		metrics.WritePrometheus(w, true)
 	})
 
