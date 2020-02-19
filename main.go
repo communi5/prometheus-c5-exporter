@@ -16,11 +16,13 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
-const version = "0.4.0"
-const listen = ":9055"
 
-var metricSet *metrics.Set
+// Command line options
+var listen string
 var debug bool
+
+// Global metric set
+var metricSet *metrics.Set
 
 type eventCounter struct {
 	ID    string
@@ -347,6 +349,7 @@ func main() {
 
 	// Check command line
 	flag.BoolVar(&debug, "debug", false, "Enable debug output")
+	flag.StringVar(&listen, "listen", ":9055", "Listen on (defaults to :9055)")
 	flag.Parse()
 
 	// Expose the registered metrics at `/metrics` path.
