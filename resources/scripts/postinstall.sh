@@ -7,7 +7,8 @@ if [ $? -gt 0 ]; then
 fi
 if [ -f /etc/prometheus-c5-exporter.conf ]; then
   echo "Adjust permissions for config files"
-  chmod 640 /etc/prometheus-c5-exporter.conf
+  chown prometheus /etc/prometheus-c5-exporter.conf
+  chmod 644 /etc/prometheus-c5-exporter.conf
 fi
 if [ -f /etc/init.d/prometheus-c5-exporter ]; then
   echo "Adjust permission for systemV init script"
