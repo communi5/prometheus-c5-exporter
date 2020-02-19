@@ -13,14 +13,12 @@ import (
 	"sync"
 	"time"
 
+	"git.neotel.at/neotel/c5-exporter/config"
 	"github.com/VictoriaMetrics/metrics"
+	"github.com/jinzhu/configor"
 )
 
 const version = "0.4.2"
-
-// Command line options
-var listen string
-var debug bool
 
 // Global metric set
 var metricSet *metrics.Set
@@ -341,32 +339,59 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 	processC5Counter(prefix, c5state.CounterInfos)
 }
 
-var sipproxydURL = "http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"
-var acdQueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"
-var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
-
 func main() {
-	metricSet = metrics.NewSet()
 
-	var configFile string
-	// Check command line
-	flag.BoolVar(&debug, "debug", false, "Enable debug output")
-	flag.StringVar(&listen, "listen", ":9055", "Listen on (defaults to :9055)")
-	flag.StringVar(&configFile, "config", "", "Path to configuration file (not used yet)")
+	conf := &config.AppConfig
+
+	// Define and parse commandline flags for initial configuration
+	configFile := flag.String("config", "prometheus-c5-exporter.conf", "Configuration file to load")
+	flag.BoolVar(&conf.Debug, "debug", false, "Enable debug")
+	flag.StringVar(&conf.ListenAddress, "listen", "", "Listen address")
 	flag.Parse()
+
+	if conf.Debug {
+		logInfo("Enabled debug logging")
+	}
+
+	if configFile != nil {
+
+		logDebug("Loading configuration", *configFile)
+		err := configor.New(&configor.Config{Debug: conf.Debug}).Load(conf, *configFile)
+		if err != nil {
+			log.Fatal("Unable to load configuration", *configFile, err)
+		}
+
+		// Reparse commandline flags to override loaded config parameters
+		flag.Parse()
+	}
+
+	logDebug("Configuration")
+	logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
+	logDebug("- sipproxyd", conf.SIPProxydEnabled, "url", conf.SIPProxydURL)
+	logDebug("- acdqueued", conf.ACDQueuedEnabled, "url", conf.ACDQueuedURL)
+	logDebug("- registard", conf.RegistrardEnabled, "url", conf.RegistrardURL)
+
+	metricSet = metrics.NewSet()
 
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
-		go fetchMetrics("sipproxyd", sipproxydURL, &wg)
-		go fetchMetrics("acdqueued", acdQueuedURL, &wg)
-		go fetchMetrics("registrard", registrardURL, &wg)
+		if conf.SIPProxydEnabled {
+			go fetchMetrics("sipproxyd", conf.SIPProxydURL, &wg)
+		}
+		if conf.ACDQueuedEnabled {
+			go fetchMetrics("acdqueued", conf.ACDQueuedURL, &wg)
+		}
+		if conf.RegistrardEnabled {
+			go fetchMetrics("registrard", conf.RegistrardURL, &wg)
+		}
 		wg.Wait()
 		metrics.WritePrometheusMetricSet(metricSet, w, true)
 	})
 
-	logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, listen))
-	log.Fatal(http.ListenAndServe(listen, nil))
+	// logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, conf.ListenAddress))
+	logInfo("Starting c5exporter version", version, "on port", conf.ListenAddress)
+	log.Fatal(http.ListenAndServe(conf.ListenAddress, nil))
 }
 
 func logInfo(msg ...interface{}) {
@@ -374,13 +399,11 @@ func logInfo(msg ...interface{}) {
 }
 
 func logDebug(msg ...interface{}) {
-	if debug {
+	if config.AppConfig.Debug {
 		log.Print("[DEBUG] ", fmt.Sprintln(msg...))
 	}
 }
 
 func logError(msg ...interface{}) {
-	if debug {
-		log.Print("[ERROR] ", fmt.Sprintln(msg...))
-	}
+	log.Print("[ERROR] ", fmt.Sprintln(msg...))
 }

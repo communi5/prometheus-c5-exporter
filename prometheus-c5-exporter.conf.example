@@ -1,0 +1,14 @@
+listenAddress = ":9055"
+debug = false
+
+### Query sipproxyd process
+# sipproxydEnabled = true
+# sipproxydURL = "http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"
+
+### Query acdqueued process
+# acdqueuedEnabled = true
+# acdqueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"
+
+### Query registard process
+# registrardEnabled = true
+# registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
