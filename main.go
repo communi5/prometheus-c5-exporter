@@ -41,14 +41,17 @@ type usageCounter struct {
 }
 
 type c5Response struct {
-	ProxyState     string        // "proxyState" : "active", // sipproxyd only
-	QueueState     string        // "queueState" : "active", // acdqueued only
-	RegistrarState string        // "proxyState" : "active", // registar only
-	BuildVersion   string        `json:"buildVersion:"` // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
-	StartupTime    string        `json:"startupTime:"`  // "startupTime" : "2020-01-19 04:01:04.503",
-	MemoryUsage    string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
-	TuQueueStatus  string        // "tuQueueStatus" : "OK - checked: 1830",
-	CounterInfos   []interface{} // "counterInfos": [ ... ]
+	ProxyState       string        // "proxyState" : "active", // sipproxyd only
+	QueueState       string        // "queueState" : "active", // acdqueued only
+	RegistrarState   string        // "registrarState" : "active", // registar only
+	BuildVersion     string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
+	BuildVersionOld  string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
+	StartupTime      string        // "startupTime" : "2020-01-19 04:01:04.503",
+	StartupTimeOld   string        `json:"startupTime:"` // Workaround for typo in "startupTime:" (trailing colon) before R6.2
+	MemoryUsage      string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
+	TuQueueStatus    string        // "tuQueueStatus" : "OK - checked: 1830",
+	CounterInfos     []interface{} // "counterInfos": [ ... ]
+	AlarmedTrapInfos []interface{} // "alarmedTrapInfos": [ ... ]
 }
 
 func buildMetricName(prefix string, name string, idx *int) string {
@@ -299,8 +302,15 @@ func clearMetrics(prefix string) {
 func processBaseMetrics(prefix string, state c5Response) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
-	logInfo("Processed", prefix, version, "started", state.StartupTime)
-	setMetricValue(prefix+`_info{version="`+parseBuildString(state.BuildVersion)+`",starttime="`+state.StartupTime+`"}`, 1)
+	if version == "" { // Workaround for typo in sessionconsole before R6.2
+		version = parseBuildString(state.BuildVersionOld)
+	}
+	startupTime := state.StartupTime
+	if startupTime == "" { // Workaround for typo in sessionconsole before R6.2
+		startupTime = state.StartupTimeOld
+	}
+	logInfo("Processed", prefix, version, "started", startupTime)
+	setMetricValue(prefix+`_info{version="`+version+`",starttime="`+startupTime+`"}`, 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
 	setMetricValue(prefix+`_state`, parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState))
@@ -399,7 +409,7 @@ func main() {
 	})
 
 	// logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, conf.ListenAddress))
-	logInfo("Starting c5exporter version", version, "on port", conf.ListenAddress)
+	logInfo("Starting c5exporter version", version, "on", conf.ListenAddress)
 	log.Fatal(http.ListenAndServe(conf.ListenAddress, nil))
 }
 
