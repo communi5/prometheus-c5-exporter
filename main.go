@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,6 +20,7 @@ const version = "0.4.0"
 const listen = ":9055"
 
 var metricSet *metrics.Set
+var debug bool
 
 type eventCounter struct {
 	ID    string
@@ -60,7 +62,7 @@ func buildMetricName(prefix string, name string, idx *int) string {
 }
 
 func setUsageMetric(prefix string, metric usageCounter) {
-	// log.Println("set usage metric for ", prefix, metric.Name)
+	// logDebug("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
 	setMetricValue(current, metric.Current)
 	lastMin := buildMetricName(prefix, metric.Name+"_lastmin", metric.Idx)
@@ -72,18 +74,18 @@ func setUsageMetric(prefix string, metric usageCounter) {
 }
 
 func setCounterMetric(prefix string, metric eventCounter) {
-	// log.Println("set usage metric for ", prefix, metric.Name)
+	// logDebug("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_total", metric.Idx)
 	setMetricValue(current, metric.Total)
 }
 
 func setMetricValue(name string, value uint64) {
-	// log.Println("set metric ", name, "value", value)
+	// logDebug("set metric ", name, "value", value)
 	metricSet.GetOrCreateCounter(name).Set(value)
 }
 
 func parseInt64(str string) int64 {
-	// log.Printf("Attempting to parse string as int64: '%s'", str)
+	// logDebug("Attempting to parse string as int64: '%s'", str)
 	i64, err := strconv.ParseInt(str, 10, 63)
 	if err != nil {
 		log.Fatal("Failed to parse as int64:", str)
@@ -124,7 +126,7 @@ func parseMemoryString(memoryUsage string) (memUsed, memTotal, memMaxUsage uint6
 	parts := strings.Split(memoryUsage, "-")
 	for _, p := range parts {
 		param := strings.SplitN(strings.TrimSpace(p), ":", 2)
-		// log.Println("Parsing memory part", p, param)
+		// logDebug("Parsing memory part", p, param)
 		key := strings.ToLower(strings.TrimSpace(param[0]))
 		switch key {
 		case "mem used":
@@ -132,11 +134,11 @@ func parseMemoryString(memoryUsage string) (memUsed, memTotal, memMaxUsage uint6
 				continue
 			}
 			if strings.Contains(param[1], "%") { // probably R6.2
-				// log.Println("Parse memused R6.2", param[1])
+				// logDebug("Parse memused R6.2", param[1])
 				memparts := strings.Fields(param[1])
 				memUsed = parseDataSize(memparts[1])
 			} else {
-				// log.Println("Parse memused R6.0", param[1])
+				// logDebug("Parse memused R6.0", param[1])
 				memUsed = parseDataSize(strings.TrimSpace(param[1]))
 			}
 		case "mem total":
@@ -154,10 +156,10 @@ func parseMemoryStringRegex(memoryUsage string) (memUsed, memTotal, memMaxUsage 
 	memRegex := regexp.MustCompile(`(?i)mem used:(?: *\d+%)? *(\d+[tgmkb]*) .* mem total: *(\d+[tgmkb]*).* max: *(\d+)%`)
 	matches := memRegex.FindStringSubmatch(memoryUsage)
 	if len(matches) > 1 {
-		// log.Println("matches:", matches[1:4])
+		// logDebug("matches:", matches[1:4])
 		return parseDataSize(matches[1]), parseDataSize(matches[2]), parseUint64(matches[3])
 	}
-	log.Println("Failed to parse memory usage:", memoryUsage)
+	logError("Failed to parse memory usage:", memoryUsage)
 	return
 }
 
@@ -249,10 +251,8 @@ func processC5Counter(prefix string, lines []interface{}) {
 	isGauge := false
 	for _, line := range lines {
 		v := reflect.ValueOf(line)
-		// log.Println("Processing line of type", v.Type(), "kind", v.Kind())
 		switch v.Kind() {
 		case reflect.Slice, reflect.Array:
-			//log.Println("Detected array")
 			sublines := make([]string, v.Len())
 			for i := 0; i < v.Len(); i++ {
 				sublines[i] = v.Index(i).Elem().String()
@@ -262,7 +262,6 @@ func processC5Counter(prefix string, lines []interface{}) {
 				setUsageMetric(prefix, c)
 			}
 		case reflect.String:
-			// log.Println("Detected string")
 			if strings.Contains(line.(string), "Event counters") {
 				isGauge = false
 				continue
@@ -276,19 +275,21 @@ func processC5Counter(prefix string, lines []interface{}) {
 			} else {
 				c := parseEventCounter(line.(string))
 				setCounterMetric(prefix, c)
-				// log.Println("gauge #", c.ID, "name", c.Name, "value", c.Total)
+				if c.Name == "CALL_CONTROL_ORIG_CALL_SETUP_SUCCESS" {
+					logDebug(prefix, c.Name, c.Total)
+				}
 			}
-			// log.Println("line", line, "isGauge", isGauge)
+			// logDebug("line", line, "isGauge", isGauge)
 		}
 	}
 	return
 }
 
 func clearMetrics(prefix string) {
-	log.Println("Clear metric counters for", prefix)
+	logDebug("Clear metric counters for", prefix)
 	for _, name := range metricSet.ListMetricNames() {
 		if strings.HasPrefix(name, prefix) {
-			log.Println("Unregister metric counter", name)
+			logDebug("Unregister metric counter", name)
 			metricSet.UnregisterMetric(name)
 		}
 	}
@@ -297,7 +298,7 @@ func clearMetrics(prefix string) {
 func processBaseMetrics(prefix string, state c5Response) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
-	log.Println("Processed", prefix, version, "started", state.StartupTime, state.BuildVersion)
+	logInfo("Processed", prefix, version, "started", state.StartupTime, state.BuildVersion)
 	setMetricValue(prefix+`_info{version="`+parseBuildString(state.BuildVersion)+`",starttime="`+state.StartupTime+`"}`, 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
@@ -317,16 +318,16 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 	client := http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
-		log.Println("Failed to connect", err)
+		logError("Failed to connect", err)
 		clearMetrics(prefix)
 		return
 	}
 	defer resp.Body.Close()
 	var c5state c5Response
-	// log.Println("Parsing response body", resp.Body)
+	// logDebug("Parsing response body", resp.Body)
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
 	if err != nil {
-		log.Println("Failed to parse response, err: ", err)
+		logError("Failed to parse response, err: ", err)
 		clearMetrics(prefix)
 		return
 	}
@@ -343,6 +344,11 @@ var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 
 func main() {
 	metricSet = metrics.NewSet()
+
+	// Check command line
+	flag.BoolVar(&debug, "debug", false, "Enable debug output")
+	flag.Parse()
+
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
@@ -353,6 +359,22 @@ func main() {
 		metrics.WritePrometheusMetricSet(metricSet, w, true)
 	})
 
-	log.Printf("Starting c5exporter v%s on port %s", version, listen)
+	logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, listen))
 	log.Fatal(http.ListenAndServe(listen, nil))
+}
+
+func logInfo(msg ...interface{}) {
+	log.Print("[INFO] ", fmt.Sprintln(msg...))
+}
+
+func logDebug(msg ...interface{}) {
+	if debug {
+		log.Print("[DEBUG] ", fmt.Sprintln(msg...))
+	}
+}
+
+func logError(msg ...interface{}) {
+	if debug {
+		log.Print("[ERROR] ", fmt.Sprintln(msg...))
+	}
 }
