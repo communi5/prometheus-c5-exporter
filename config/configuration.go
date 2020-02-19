@@ -7,10 +7,10 @@ var AppConfig AppConfiguration
 type AppConfiguration struct {
 	Debug             bool
 	ListenAddress     string `default:":9055"`
-	SIPProxydEnabled  bool   // `default:"true"`
+	SIPProxydEnabled  bool
 	SIPProxydURL      string `default:"http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"`
-	ACDQueuedEnabled  bool   `default:"true"`
+	ACDQueuedEnabled  bool
 	ACDQueuedURL      string `default:"http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"`
-	RegistrardEnabled bool   `default:"true"`
+	RegistrardEnabled bool
 	RegistrardURL     string `default:"http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"`
 }
