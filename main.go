@@ -344,18 +344,17 @@ func main() {
 	conf := &config.AppConfig
 
 	// Define and parse commandline flags for initial configuration
-	configFile := flag.String("config", "prometheus-c5-exporter.conf", "Configuration file to load")
+	configFile := flag.String("config", "", "Configuration file to load")
 	flag.BoolVar(&conf.Debug, "debug", false, "Enable debug")
-	flag.StringVar(&conf.ListenAddress, "listen", "", "Listen address")
+	flag.StringVar(&conf.ListenAddress, "listen", ":9055", "Listen address")
 	flag.Parse()
 
 	if conf.Debug {
 		logInfo("Enabled debug logging")
 	}
 
-	if configFile != nil {
-
-		logDebug("Loading configuration", *configFile)
+	if configFile != nil && *configFile != "" {
+		logInfo("Loading configuration", *configFile)
 		err := configor.New(&configor.Config{Debug: conf.Debug}).Load(conf, *configFile)
 		if err != nil {
 			log.Fatal("Unable to load configuration", *configFile, err)
@@ -363,9 +362,19 @@ func main() {
 
 		// Reparse commandline flags to override loaded config parameters
 		flag.Parse()
+	} else {
+		logInfo("No configuration file used. Enabling querying of all C5 processes.")
+		conf.SIPProxydEnabled = true
+		conf.ACDQueuedEnabled = true
+		conf.RegistrardEnabled = true
 	}
 
-	logDebug("Configuration")
+	if !(conf.SIPProxydEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled) {
+		logError("No c5 processes enabled to query. Please enable at least on process in configuration.")
+		log.Fatal("Aborting.")
+	}
+
+	logDebug("Using configuration:")
 	logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
 	logDebug("- sipproxyd", conf.SIPProxydEnabled, "url", conf.SIPProxydURL)
 	logDebug("- acdqueued", conf.ACDQueuedEnabled, "url", conf.ACDQueuedURL)
