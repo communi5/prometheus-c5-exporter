@@ -348,9 +348,11 @@ var registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 func main() {
 	metricSet = metrics.NewSet()
 
+	var configFile string
 	// Check command line
 	flag.BoolVar(&debug, "debug", false, "Enable debug output")
 	flag.StringVar(&listen, "listen", ":9055", "Listen on (defaults to :9055)")
+	flag.StringVar(&configFile, "config", "", "Path to configuration file (not used yet)")
 	flag.Parse()
 
 	// Expose the registered metrics at `/metrics` path.
