@@ -341,7 +341,7 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 
 func main() {
 
-	conf := &config.AppConfig
+	conf := config.AppConfig
 
 	// Define and parse commandline flags for initial configuration
 	configFile := flag.String("config", "", "Configuration file to load")

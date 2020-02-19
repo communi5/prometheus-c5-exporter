@@ -1,7 +1,7 @@
 package config
 
 // AppConfig allows global access to config
-var AppConfig AppConfiguration
+var AppConfig = &AppConfiguration{}
 
 // AppConfiguration is used to define the TOML config structure
 type AppConfiguration struct {
