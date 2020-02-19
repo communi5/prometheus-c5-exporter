@@ -301,7 +301,7 @@ func clearMetrics(prefix string) {
 func processBaseMetrics(prefix string, state c5Response) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
-	logInfo("Processed", prefix, version, "started", state.StartupTime, state.BuildVersion)
+	logInfo("Processed", prefix, version, "started", state.StartupTime)
 	setMetricValue(prefix+`_info{version="`+parseBuildString(state.BuildVersion)+`",starttime="`+state.StartupTime+`"}`, 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
