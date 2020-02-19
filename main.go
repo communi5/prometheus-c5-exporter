@@ -16,6 +16,7 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
+const version = "0.4.1"
 
 // Command line options
 var listen string
