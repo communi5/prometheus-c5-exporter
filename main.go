@@ -252,7 +252,8 @@ func parseEventCounter(line string) eventCounter {
 }
 
 func processC5Counter(prefix string, lines []interface{}) {
-	isGauge := false
+	const event, usage string = "event", "usage"
+	var cntType string
 	for _, line := range lines {
 		v := reflect.ValueOf(line)
 		switch v.Kind() {
@@ -266,24 +267,33 @@ func processC5Counter(prefix string, lines []interface{}) {
 				setUsageMetric(prefix, c)
 			}
 		case reflect.String:
-			if strings.Contains(line.(string), "Event counters") {
-				isGauge = false
+			l := line.(string)
+			if strings.Contains(l, "Event counters") {
+				cntType = event
 				continue
-			} else if strings.Contains(line.(string), "Usage counters") {
-				isGauge = true
+			} else if strings.Contains(l, "Usage counters") {
+				cntType = usage
+				continue
+			} else if strings.HasPrefix(l, "    ") {
+				// Skip unknown elements like the OBSERVERS line:
+				// " 75 PRESENCE_ACTIVE_SUBSCRIPTIONS                       36     36     36     36     36     36       2045",
+				// "    OBSERVERS  (dialog,csta,reg):  36,0,0",
+				logDebug(prefix, "ignore line", l)
 				continue
 			}
-			if isGauge {
-				c := parseUsageCounter(line.(string))
+			if cntType == usage {
+				c := parseUsageCounter(l)
 				setUsageMetric(prefix, c)
-			} else {
-				c := parseEventCounter(line.(string))
+			} else if cntType == event {
+				c := parseEventCounter(l)
 				setCounterMetric(prefix, c)
 				if c.Name == "CALL_CONTROL_ORIG_CALL_SETUP_SUCCESS" {
 					logDebug(prefix, c.Name, c.Total)
 				}
+			} else {
+				logDebug(prefix, "ignoring line", l)
 			}
-			// logDebug("line", line, "isGauge", isGauge)
+			// logDebug("line type", cntType, line)
 		}
 	}
 	return
