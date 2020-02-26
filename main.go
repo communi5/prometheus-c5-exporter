@@ -415,7 +415,8 @@ func main() {
 			go fetchMetrics("registrard", conf.RegistrardURL, &wg)
 		}
 		wg.Wait()
-		metrics.WritePrometheusMetricSet(metricSet, w, true)
+		metricSet.WritePrometheus(w)
+		metrics.WriteProcessMetrics(w)
 	})
 
 	// logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, conf.ListenAddress))
