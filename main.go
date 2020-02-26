@@ -287,9 +287,6 @@ func processC5Counter(prefix string, lines []interface{}) {
 			} else if cntType == event {
 				c := parseEventCounter(l)
 				setCounterMetric(prefix, c)
-				if c.Name == "CALL_CONTROL_ORIG_CALL_SETUP_SUCCESS" {
-					logDebug(prefix, c.Name, c.Total)
-				}
 			} else {
 				logDebug(prefix, "ignoring line", l)
 			}
