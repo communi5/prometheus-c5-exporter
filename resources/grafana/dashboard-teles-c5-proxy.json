@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 77,
-  "iteration": 1582127728864,
+  "iteration": 1582894090900,
   "links": [
     {
       "asDropdown": true,
@@ -58,7 +58,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 1
       },
@@ -146,8 +146,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 1
       },
       "id": 70,
@@ -230,8 +230,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 1
       },
       "id": 31,
@@ -319,8 +319,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 12,
+        "w": 3,
+        "x": 9,
         "y": 1
       },
       "id": 69,
@@ -399,8 +399,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 16,
+        "w": 3,
+        "x": 12,
         "y": 1
       },
       "id": 71,
@@ -479,8 +479,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 20,
+        "w": 3,
+        "x": 15,
         "y": 1
       },
       "id": 72,
@@ -540,6 +540,168 @@
         }
       ],
       "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": ["#73BF69", "#FF9830", "#F2495C"],
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "description": "Version of the running software",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 76,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "sipproxyd_info{instance=~\"$instance\"}",
+          "format": "time_series",
+          "instant": true,
+          "intervalFactor": 1,
+          "legendFormat": "{{ version }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "title": "Version",
+      "type": "singlestat",
+      "valueFontSize": "70%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "name"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": ["#73BF69", "#FF9830", "#F2495C"],
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "description": "Timestamp of the last startup",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 77,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "sipproxyd_info{instance=~\"$instance\"}",
+          "format": "time_series",
+          "instant": true,
+          "intervalFactor": 1,
+          "legendFormat": "{{ starttime }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "title": "Last Startup",
+      "type": "singlestat",
+      "valueFontSize": "30%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "name"
     },
     {
       "aliasColors": {
@@ -1362,6 +1524,376 @@
         "x": 0,
         "y": 21
       },
+      "id": 79,
+      "panels": [],
+      "title": "Queues",
+      "type": "row"
+    },
+    {
+      "aliasColors": {
+        "used": "#890f02"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 0,
+      "description": "",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 81,
+      "interval": "",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_queue_size_current{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "current",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_queue_size_lastmax{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "last max ",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_queue_size_lastmin{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "last min",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_queue_size_lastavg{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 1,
+          "legendFormat": "last avg",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Transaction TU Manager Queue Size",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "used": "#890f02"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 0,
+      "description": "",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 82,
+      "interval": "",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_reinject_queue_current{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "current",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_reinject_queue_lastmax{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "last max ",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_reinject_queue_lastmin{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "last min",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(sipproxyd_transaction_and_tu_tu_manager_reinject_queue_lastavg{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 1,
+          "legendFormat": "last avg",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Transaction TU Manager Reinject Queue Size",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "used": "#890f02"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 0,
+      "description": "",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 80,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(sipproxyd_presence_notification_queue_size_current{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "current",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(sipproxyd_presence_notification_queue_size_lastmax{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "last max ",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(sipproxyd_presence_notification_queue_size_lastmin{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "last min",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(sipproxyd_presence_notification_queue_size__lastavg{instance=~\"$instance\"}) by (instance)",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 1,
+          "legendFormat": "last avg",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Notification Queue Size",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
       "id": 24,
       "panels": [],
       "title": "Internal Communication",
@@ -1381,7 +1913,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 29
       },
       "hiddenSeries": false,
       "id": 26,
@@ -1489,7 +2021,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 29
       },
       "hiddenSeries": false,
       "id": 65,
@@ -1597,7 +2129,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 28,
@@ -1733,7 +2265,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 66,
@@ -1827,7 +2359,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 41
       },
       "id": 20,
       "panels": [
@@ -2166,9 +2698,9 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "c5sp2-1:9055",
-          "value": "c5sp2-1:9055"
+          "selected": true,
+          "text": "c5sp1t-2:9055",
+          "value": "c5sp1t-2:9055"
         },
         "datasource": "Prometheus",
         "definition": "label_values(sipproxyd_transport_message_in_total, instance)",
@@ -2192,8 +2724,8 @@
     ]
   },
   "time": {
-    "from": "2020-02-19T13:59:37.670Z",
-    "to": "2020-02-19T14:06:23.166Z"
+    "from": "2020-02-28T12:19:51.242Z",
+    "to": "2020-02-28T12:24:59.034Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -2213,5 +2745,5 @@
   "timezone": "",
   "title": "TELES C5 Proxy",
   "uid": "KC2Q5msWk",
-  "version": 30
+  "version": 32
 }
