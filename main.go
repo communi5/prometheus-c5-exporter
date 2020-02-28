@@ -65,6 +65,12 @@ func buildMetricName(prefix string, name string, idx *int) string {
 	return name
 }
 
+func normalizeMetricName(name string) string {
+	// Avoid unwanted trailing chars like in
+	// v6.0.2.69: TRANSACTION_AND_TU_TU_MANAGER_REINJECT_QUEUE_
+	return strings.Trim(name, "_. ")
+}
+
 func setUsageMetric(prefix string, metric usageCounter) {
 	// logDebug("set usage metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
@@ -198,7 +204,7 @@ func parseUsageCounter(line string) usageCounter {
 	parts := strings.Fields(line)
 	return usageCounter{
 		ID:      parts[0],
-		Name:    parts[1],
+		Name:    normalizeMetricName(parts[1]),
 		Current: parseUint64(parts[2]),
 		LastMin: parseUint64(parts[5]),
 		LastMax: parseUint64(parts[6]),
@@ -228,7 +234,7 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 			cnts = append(cnts,
 				usageCounter{
 					ID:      id,
-					Name:    name,
+					Name:    normalizeMetricName(name),
 					Idx:     &idx,
 					Current: parseUint64(parts[0]),
 					LastMin: parseUint64(parts[3]),
@@ -246,7 +252,7 @@ func parseEventCounter(line string) eventCounter {
 	parts := strings.Fields(line)
 	return eventCounter{
 		ID:    parts[0],
-		Name:  parts[1],
+		Name:  normalizeMetricName(parts[1]),
 		Total: parseUint64(parts[2]),
 	}
 }
