@@ -337,7 +337,6 @@ func processBaseMetrics(prefix string, state c5Response) {
 }
 
 func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
-	wg.Add(1)
 	defer wg.Done()
 	client := http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Get(url)
@@ -409,12 +408,15 @@ func main() {
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
 		if conf.SIPProxydEnabled {
+			wg.Add(1)
 			go fetchMetrics("sipproxyd", conf.SIPProxydURL, &wg)
 		}
 		if conf.ACDQueuedEnabled {
+			wg.Add(1)
 			go fetchMetrics("acdqueued", conf.ACDQueuedURL, &wg)
 		}
 		if conf.RegistrardEnabled {
+			wg.Add(1)
 			go fetchMetrics("registrard", conf.RegistrardURL, &wg)
 		}
 		wg.Wait()
