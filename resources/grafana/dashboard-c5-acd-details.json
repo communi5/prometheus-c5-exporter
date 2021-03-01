@@ -14,15 +14,17 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
-  "id": 80,
-  "iteration": 1582127771255,
+  "graphTooltip": 1,
+  "id": 81,
+  "iteration": 1614616616261,
   "links": [
     {
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
-      "tags": ["C5"],
+      "tags": [
+        "C5"
+      ],
       "title": "Class 5",
       "type": "dashboards"
     }
@@ -46,9 +48,18 @@
       "cacheTimeout": null,
       "colorBackground": true,
       "colorValue": false,
-      "colors": ["#1F60C4", "#37872D", "#FF9830"],
+      "colors": [
+        "#1F60C4",
+        "#37872D",
+        "#FF9830"
+      ],
       "datasource": "Prometheus",
-      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -59,7 +70,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 1
       },
@@ -80,7 +91,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -101,7 +111,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "registrard_state{instance=~\"$instance\", job=~\"c5-exporter\"}",
+          "expr": "max(acdqueued_state{instance=~\"$instance\", job=~\"c5-exporter\"})",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -109,7 +119,7 @@
         }
       ],
       "thresholds": "1,2",
-      "title": "Registrar Status",
+      "title": "ACD Status",
       "type": "singlestat",
       "valueFontSize": "70%",
       "valueMaps": [
@@ -135,8 +145,18 @@
       "cacheTimeout": null,
       "colorBackground": true,
       "colorValue": false,
-      "colors": ["#37872D", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
+      "colors": [
+        "#37872D",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -147,8 +167,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 1
       },
       "id": 70,
@@ -168,7 +188,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -189,7 +208,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(registrard_overload_protection_limit_reached_total{instance=~\"$instance\"} - registrard_overload_protection_limit_reached_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_protection_limit_reached_total{instance=~\"$instance\"} - acdqueued_overload_protection_limit_reached_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -197,7 +216,7 @@
         }
       ],
       "thresholds": "1",
-      "title": "Registrar Overload",
+      "title": "ACD Overload",
       "type": "singlestat",
       "valueFontSize": "70%",
       "valueMaps": [
@@ -218,9 +237,19 @@
       "cacheTimeout": null,
       "colorBackground": true,
       "colorValue": false,
-      "colors": ["#F2495C", "#37872D", "#F2495C"],
+      "colors": [
+        "#F2495C",
+        "#37872D",
+        "#F2495C"
+      ],
       "datasource": "Prometheus",
       "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -231,8 +260,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 1
       },
       "id": 31,
@@ -252,7 +281,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -273,7 +301,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "registrard_tu_queue_state{instance=~\"$instance\",job=~\"c5-exporter\"}",
+          "expr": "min(acdqueued_tu_queue_state{instance=~\"$instance\",job=~\"c5-exporter\"})",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -307,9 +335,19 @@
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": false,
-      "colors": ["#d44a3a", "rgba(237, 129, 40, 0.89)", "#299c46"],
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
       "datasource": "Prometheus",
       "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -320,8 +358,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 12,
+        "w": 3,
+        "x": 9,
         "y": 1
       },
       "id": 69,
@@ -341,7 +379,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -362,7 +399,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "registrard_registrar_active_registrations_current{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_call_control_active_calls_current{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Active Calls",
@@ -370,7 +407,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Registered Contacts",
+      "title": "Active Calls",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -386,10 +423,20 @@
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": true,
-      "colors": ["#73BF69", "#FF9830", "#F2495C"],
+      "colors": [
+        "#73BF69",
+        "#FF9830",
+        "#F2495C"
+      ],
       "datasource": "Prometheus",
       "decimals": 1,
       "description": "Maximum memory usage through process lifetime",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "percentunit",
       "gauge": {
         "maxValue": 100,
@@ -400,8 +447,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 16,
+        "w": 3,
+        "x": 12,
         "y": 1
       },
       "id": 71,
@@ -421,7 +468,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -442,7 +488,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "registrard_memory_used_bytes{instance=~\"$instance\"} / registrard_memory_total_bytes{instance=~\"$instance\"}",
+          "expr": "max(acdqueued_memory_used_bytes{instance=~\"$instance\"} / acdqueued_memory_total_bytes{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Mem Usage",
@@ -466,10 +512,20 @@
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": true,
-      "colors": ["#73BF69", "#FF9830", "#F2495C"],
+      "colors": [
+        "#73BF69",
+        "#FF9830",
+        "#F2495C"
+      ],
       "datasource": "Prometheus",
       "decimals": 0,
       "description": "Maximum memory usage through process lifetime",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -480,8 +536,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 20,
+        "w": 3,
+        "x": 15,
         "y": 1
       },
       "id": 72,
@@ -501,7 +557,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -522,7 +577,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "registrard_memory_max_used_percent{instance=~\"$instance\"}",
+          "expr": "max(acdqueued_memory_max_used_percent{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Max Mem Usage",
@@ -543,6 +598,188 @@
       "valueName": "current"
     },
     {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#73BF69",
+        "#FF9830",
+        "#F2495C"
+      ],
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "description": "Version of the running software",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 75,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "max(acdqueued_info{instance=~\"$instance\"}) without (starttime)",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{ version }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "title": "Version",
+      "type": "singlestat",
+      "valueFontSize": "70%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "name"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#73BF69",
+        "#FF9830",
+        "#F2495C"
+      ],
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "description": "Timestamp of the last startup",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 77,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "topk(1, count(acdqueued_info{instance=~\"$instance\"}) by (starttime))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{ starttime }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "title": "Last Startup",
+      "type": "singlestat",
+      "valueFontSize": "30%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "name"
+    },
+    {
       "aliasColors": {
         "used": "#890f02"
       },
@@ -550,6 +787,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -576,9 +820,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -595,14 +840,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "registrard_memory_used_bytes{instance=\"$instance\"}",
+          "expr": "sum(acdqueued_memory_used_bytes{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Used",
           "refId": "C"
         },
         {
-          "expr": "registrard_memory_total_bytes{instance=\"$instance\"}",
+          "expr": "sum(acdqueued_memory_total_bytes{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Total",
@@ -658,6 +903,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -684,9 +936,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -696,7 +949,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(registrard_overload_protection_limit_reached_total{instance=\"$instance\"} - registrard_overload_protection_limit_reached_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_protection_limit_reached_total{instance=~\"$instance\"} - acdqueued_overload_protection_limit_reached_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit Reached",
@@ -752,6 +1005,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -778,9 +1038,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -790,42 +1051,42 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(registrard_overload_heap_warning_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_heap_warning_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_heap_warning_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_heap_warning_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Heap Warning",
           "refId": "A"
         },
         {
-          "expr": "sum(registrard_overload_heap_critical_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_heap_critical_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_heap_critical_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_heap_critical_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Heap Critical",
           "refId": "B"
         },
         {
-          "expr": "sum(registrard_overload_limit1_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_limit1_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_limit1_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_limit1_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit1 Rejects",
           "refId": "D"
         },
         {
-          "expr": "sum(registrard_overload_limit2_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_limit2_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_limit2_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_limit2_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit2 Rejects",
           "refId": "E"
         },
         {
-          "expr": "sum(registrard_overload_limit3_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_limit3_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_limit3_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_limit3_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit3 Rejects",
           "refId": "F"
         },
         {
-          "expr": "sum(registrard_overload_limit4_rejected_in_requests_total{instance=\"$instance\"} - registrard_overload_limit4_rejected_in_requests_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_overload_limit4_rejected_in_requests_total{instance=~\"$instance\"} - acdqueued_overload_limit4_rejected_in_requests_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Limit4 Rejects",
@@ -884,7 +1145,7 @@
       },
       "id": 18,
       "panels": [],
-      "title": "Register Overview",
+      "title": "Call Overview",
       "type": "row"
     },
     {
@@ -896,7 +1157,13 @@
       "dashes": false,
       "datasource": null,
       "decimals": 0,
-      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -923,9 +1190,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -935,28 +1203,28 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "registrard_registrar_active_registrations_current{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_call_control_active_calls_current{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "current",
           "refId": "A"
         },
         {
-          "expr": "registrard_registrar_active_registrations_lastmax{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_call_control_active_calls_lastmax{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "last max ",
           "refId": "B"
         },
         {
-          "expr": "registrard_registrar_active_registrations_lastmin{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_call_control_active_calls_lastmin{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "last min",
           "refId": "C"
         },
         {
-          "expr": "registrard_registrar_active_registrations_lastavg{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_call_control_active_calls_lastavg{instance=~\"$instance\"})",
           "format": "time_series",
           "hide": true,
           "intervalFactor": 1,
@@ -968,7 +1236,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Registrations",
+      "title": "Concurrent Calls",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1014,6 +1282,14 @@
       "dashes": false,
       "datasource": null,
       "decimals": 0,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1021,6 +1297,130 @@
         "w": 12,
         "x": 12,
         "y": 9
+      },
+      "hiddenSeries": false,
+      "id": 61,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.2",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(acdqueued_call_control_orig_authentication_required_total{instance=~\"$instance\"} - acdqueued_call_control_orig_authentication_required_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Auth required",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(acdqueued_call_control_orig_client_error_total{instance=~\"$instance\"} - acdqueued_call_control_orig_client_error_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Client error",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(acdqueued_call_control_orig_server_error_total{instance=~\"$instance\"} - acdqueued_call_control_orig_server_error_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Server error",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(acdqueued_call_control_orig_global_error_total{instance=~\"$instance\"} - acdqueued_call_control_orig_global_error_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Global error",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Call Errors",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "used": "#890f02"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 15
       },
       "hiddenSeries": false,
       "id": 58,
@@ -1040,9 +1440,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1052,232 +1453,39 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(registrard_registrar_authentication_error_total{instance=\"$instance\"} - registrard_registrar_authentication_error_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_call_control_orig_call_connected_total{instance=~\"$instance\"} - acdqueued_call_control_orig_call_connected_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "Authentication errors",
+          "legendFormat": "Connected",
           "refId": "A"
         },
         {
-          "expr": "sum(registrard_registrar_contact_blocked_total{instance=\"$instance\"} - registrard_registrar_contact_blocked_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_call_control_orig_call_fast_connected_total{instance=~\"$instance\"} - acdqueued_call_control_orig_call_fast_connected_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "Blocked contacts",
+          "legendFormat": "Fast connected",
           "refId": "B"
+        },
+        {
+          "expr": "sum(acdqueued_call_control_orig_call_setup_success_total{instance=\"$instance\"} - acdqueued_call_control_orig_call_setup_success_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Setup success",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(acdqueued_call_control_orig_redirection_total{instance=~\"$instance\"} - acdqueued_call_control_orig_redirection_total{instance=~\"$instance\"} offset $__interval >= 0)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Redirected",
+          "refId": "D"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Registration Errors",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "none",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "used": "#890f02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "decimals": 0,
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 15
-      },
-      "hiddenSeries": false,
-      "id": 75,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": false,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(registrard_ip_filter_denied_total{instance=\"$instance\"} - registrard_ip_filter_denied_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "denied",
-          "refId": "A"
-        },
-        {
-          "expr": "sum(registrard_ip_filter_not_allowed_total{instance=\"$instance\"} - registrard_ip_filter_not_allowed_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "not allowed",
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Registration IP Filter",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "none",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "used": "#890f02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "decimals": 0,
-      "description": "",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 15
-      },
-      "hiddenSeries": false,
-      "id": 74,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": false,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(registrard_registrations_limit_reached_total{instance=\"$instance\"} - registrard_registrations_limit_reached_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Reg limit",
-          "refId": "A"
-        },
-        {
-          "expr": "sum(registrard_user_registrations_limit_reached_total{instance=\"$instance\"} - registrard_user_registrations_limit_reached_total{instance=\"$instance\"} offset $__interval >= 0) by (instance)",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "User limit",
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Registration Limits Reached",
+      "title": "Call Connections",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1337,6 +1545,13 @@
       "datasource": null,
       "decimals": 0,
       "description": "Number of active websocket connections",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1363,9 +1578,10 @@
       "links": [],
       "nullPointMode": "connected",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1375,21 +1591,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "registrard_ws_connections_current{instance=~\"$instance\"} ",
+          "expr": "sum(acdqueued_ws_connections_current{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "active",
           "refId": "A"
         },
         {
-          "expr": "registrard_ws_connections_lastmin{instance=~\"$instance\"} ",
+          "expr": "sum(acdqueued_ws_connections_lastmin{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "last min",
           "refId": "B"
         },
         {
-          "expr": "registrard_ws_connections_lastmax{instance=~\"$instance\"} ",
+          "expr": "sum(acdqueued_ws_connections_lastmax{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "last max",
@@ -1445,6 +1661,13 @@
       "datasource": null,
       "decimals": 0,
       "description": "Number of active websocket connections",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1471,9 +1694,10 @@
       "links": [],
       "nullPointMode": "connected",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1483,21 +1707,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "registrard_general_rcc_active_connections_current{instance=~\"$instance\"}",
+          "expr": "sum(acdqueued_general_rcc_active_connections_current{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "active",
           "refId": "A"
         },
         {
-          "expr": "registrard_general_rcc_active_connections_lastmin{instance=~\"$instance\"} ",
+          "expr": "sum(acdqueued_general_rcc_active_connections_lastmin{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "last min",
           "refId": "B"
         },
         {
-          "expr": "registrard_general_rcc_active_connections_lastmax{instance=~\"$instance\"} ",
+          "expr": "sum(acdqueued_general_rcc_active_connections_lastmax{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "last max",
@@ -1553,6 +1777,13 @@
       "datasource": null,
       "decimals": 0,
       "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1579,9 +1810,10 @@
       "links": [],
       "nullPointMode": "connected",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1591,49 +1823,49 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(registrard_ws_agent_ev_in_total{instance=~\"$instance\"} - registrard_ws_agent_ev_in_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_agent_ev_in_total{instance=~\"$instance\"} - acdqueued_ws_agent_ev_in_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Agent in",
           "refId": "A"
         },
         {
-          "expr": "sum(registrard_ws_agent_ev_out_total{instance=~\"$instance\"} - registrard_ws_agent_ev_out_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_agent_ev_out_total{instance=~\"$instance\"} - acdqueued_ws_agent_ev_out_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Agent out",
           "refId": "B"
         },
         {
-          "expr": "sum(registrard_ws_call_ev_total{instance=~\"$instance\"} - registrard_ws_call_ev_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_call_ev_total{instance=~\"$instance\"} - acdqueued_ws_call_ev_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Calls",
           "refId": "C"
         },
         {
-          "expr": "sum(registrard_ws_call_notify_in_total{instance=~\"$instance\"} - registrard_ws_call_notify_in_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_call_notify_in_total{instance=~\"$instance\"} - acdqueued_ws_call_notify_in_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Call notify in",
           "refId": "D"
         },
         {
-          "expr": "sum(registrard_ws_call_notify_out_total{instance=~\"$instance\"} - registrard_ws_call_notify_out_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_call_notify_out_total{instance=~\"$instance\"} - acdqueued_ws_call_notify_out_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Call notify out",
           "refId": "E"
         },
         {
-          "expr": "sum(registrard_ws_call_sync_in_total{instance=~\"$instance\"} - registrard_ws_call_sync_in_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_call_sync_in_total{instance=~\"$instance\"} - acdqueued_ws_call_sync_in_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Call sync in",
           "refId": "F"
         },
         {
-          "expr": "sum(registrard_ws_call_sync_out_total{instance=~\"$instance\"} - registrard_ws_call_sync_out_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_ws_call_sync_out_total{instance=~\"$instance\"} - acdqueued_ws_call_sync_out_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Call sync out",
@@ -1689,6 +1921,13 @@
       "datasource": null,
       "decimals": 0,
       "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1715,9 +1954,10 @@
       "links": [],
       "nullPointMode": "connected",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.4.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1727,14 +1967,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(registrard_general_rcc_in_commands_total{instance=~\"$instance\"} - registrard_general_rcc_in_commands_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_general_rcc_in_commands_total{instance=~\"$instance\"} - acdqueued_general_rcc_in_commands_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Commands in",
           "refId": "A"
         },
         {
-          "expr": "sum(registrard_general_rcc_out_commands_total{instance=~\"$instance\"} - registrard_general_rcc_out_commands_total{instance=~\"$instance\"} offset $__interval >= 0) by (instance)",
+          "expr": "sum(acdqueued_general_rcc_out_commands_total{instance=~\"$instance\"} - acdqueued_general_rcc_out_commands_total{instance=~\"$instance\"} offset $__interval >= 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Commands out",
@@ -1910,7 +2150,7 @@
             "y": 35
           },
           "hiddenSeries": false,
-          "id": 76,
+          "id": 67,
           "legend": {
             "alignAsTable": false,
             "avg": true,
@@ -1934,8 +2174,6 @@
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
-          "repeatIteration": 1579512274558,
-          "repeatedByRow": true,
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
@@ -2021,7 +2259,7 @@
             "y": 35
           },
           "hiddenSeries": false,
-          "id": 77,
+          "id": 68,
           "legend": {
             "alignAsTable": false,
             "avg": true,
@@ -2120,26 +2358,38 @@
     }
   ],
   "refresh": false,
-  "schemaVersion": 22,
+  "schemaVersion": 27,
   "style": "dark",
-  "tags": ["C5"],
+  "tags": [
+    "C5"
+  ],
   "templating": {
     "list": [
       {
         "allValue": null,
         "current": {
-          "text": "c5reg4-1:9055",
-          "value": "c5reg4-1:9055"
+          "selected": true,
+          "text": [
+            "c5sp3-2:9055"
+          ],
+          "value": [
+            "c5sp3-2:9055"
+          ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(registrard_transport_message_in_total, instance)",
+        "definition": "label_values(acdqueued_transport_message_in_total, instance)",
+        "description": null,
+        "error": null,
         "hide": 0,
         "includeAll": false,
         "label": null,
-        "multi": false,
+        "multi": true,
         "name": "instance",
         "options": [],
-        "query": "label_values(registrard_transport_message_in_total, instance)",
+        "query": {
+          "query": "label_values(acdqueued_transport_message_in_total, instance)",
+          "refId": "Prometheus-instance-Variable-Query"
+        },
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -2153,12 +2403,11 @@
     ]
   },
   "time": {
-    "from": "2020-02-19T13:59:37.670Z",
-    "to": "2020-02-19T14:06:23.166Z"
+    "from": "now-15m",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
       "10s",
       "30s",
       "1m",
@@ -2169,10 +2418,20 @@
       "2h",
       "1d"
     ],
-    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
   },
   "timezone": "",
-  "title": "TELES C5 Registrar",
-  "uid": "A6_QgqyWz",
-  "version": 9
+  "title": "C5 ACD Details",
+  "uid": "KC2Q5msW2",
+  "version": 11
 }
