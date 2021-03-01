@@ -5,6 +5,10 @@ debug = false
 sipproxydEnabled = true
 # sipproxydURL = "http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"
 
+sipproxydTrunksEnabled = true
+# sipproxydTrunkStatsURL = "http://127.0.0.1:9980/c5/proxy/commands?3&7&309"
+# sipproxydTrunkLimitsURL = "http://127.0.0.1:9980/c5/proxy/commands?3&7&368"
+
 ### Query acdqueued process
 acdqueuedEnabled = true
 # acdqueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"

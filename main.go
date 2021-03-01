@@ -40,7 +40,7 @@ type usageCounter struct {
 	LastMax uint64
 }
 
-type c5Response struct {
+type c5StateResponse struct {
 	ProxyState       string        // "proxyState" : "active", // sipproxyd only
 	QueueState       string        // "queueState" : "active", // acdqueued only
 	RegistrarState   string        // "registrarState" : "active", // registar only
@@ -52,6 +52,22 @@ type c5Response struct {
 	TuQueueStatus    string        // "tuQueueStatus" : "OK - checked: 1830",
 	CounterInfos     []interface{} // "counterInfos": [ ... ]
 	AlarmedTrapInfos []interface{} // "alarmedTrapInfos": [ ... ]
+}
+
+type c5CounterResponse struct {
+	ProxyResponseTimeStampAndState string // "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+	CounterName       string        // "counterName" : "BT_CALLS_LIMIT_REACHED",
+	CounterType       string        // "counterType" : "EVENT",
+	AbsoluteValue     uint64        // "absoluteValue" : 0, // event only
+	CurrentValue      uint64        // "currentValue" : 0, // event only
+	LastValue         uint64        // "lastValue" : 0, // event only
+	MinValue          uint64        // "minValue" : 0, // counter only
+	MaxValue          uint64        // "maxValue" : 0, // counter only
+	LastMinValue      uint64        // "lastMinValue" : 0, // counter only
+	LastMaxValue      uint64        // "lastMaxValue" : 0, // counter only
+	LastAvgValue      uint64        // "lastAvgValue" : 0, // counter only
+	TotalValue        uint64        // "totalValue" : 0, // counter only
+	TableValues       []interface{} // "counterInfos": [ ... ]
 }
 
 func buildMetricName(prefix string, name string, idx *int) string {
@@ -83,9 +99,27 @@ func setUsageMetric(prefix string, metric usageCounter) {
 	setMetricValue(lastMax, metric.LastMax)
 }
 
+func setLabeledUsageMetric(prefix string, label string, metric usageCounter) {
+	// logDebug("set labeled usage metric for ", prefix, metric.Name)
+	current := buildMetricName(prefix, `current{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	setMetricValue(current, metric.Current)
+	lastMin := buildMetricName(prefix, `lastmin{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	setMetricValue(lastMin, metric.LastMin)
+	lastAvg := buildMetricName(prefix, `lastavg{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	setMetricValue(lastAvg, metric.LastAvg)
+	lastMax := buildMetricName(prefix, `lastmax{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	setMetricValue(lastMax, metric.LastMax)
+}
+
 func setCounterMetric(prefix string, metric eventCounter) {
-	// logDebug("set usage metric for ", prefix, metric.Name)
+	// logDebug("set counter metric for ", prefix, metric.Name)
 	current := buildMetricName(prefix, metric.Name+"_total", metric.Idx)
+	setMetricValue(current, metric.Total)
+}
+
+func setLabeledCounterMetric(prefix string, label string, metric eventCounter) {
+	// logDebug("set labeled counter metric for ", prefix, metric.Name)
+	current := buildMetricName(prefix, `total{`+label+`="`+metric.Name+`"}`, metric.Idx)
 	setMetricValue(current, metric.Total)
 }
 
@@ -257,7 +291,7 @@ func parseEventCounter(line string) eventCounter {
 	}
 }
 
-func processC5Counter(prefix string, lines []interface{}) {
+func processC5StateCounter(prefix string, lines []interface{}) {
 	const event, usage string = "event", "usage"
 	var cntType string
 	for _, line := range lines {
@@ -302,6 +336,61 @@ func processC5Counter(prefix string, lines []interface{}) {
 	return
 }
 
+// processC5CounterMetrics will parse a counter output of type EVENT and USAGE for 
+// a specific C5 metric.
+//
+// {
+//   "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+//   "counterName" : "BT_CALLS_LIMIT_REACHED",
+//   "counterType" : "EVENT",
+//   "absoluteValue" : 0,
+//   "currentValue" : 0,
+//   "lastValue" : 0,
+//   "tableValues" : [
+//     "name                            absolute   curr   last",
+//     "trunkname1.ipcentrex.internal         0      0      0",
+//     "trunk2.otherprovider.at               0      0      0",
+//   ],
+//   "tableCountInfo" : "curComponentCount2: 14 (10000) "
+// }
+func processC5CounterMetrics(basePrefix string, data c5CounterResponse) {
+	const event, usage string = "EVENT", "USAGE"
+	prefix := basePrefix + "_" + strings.ToLower(data.CounterName)
+	setMetricValue(prefix+`_current`, data.CurrentValue)
+	logDebug("Processing", prefix, "type", data.CounterType)
+	if data.CounterType == event {
+		setMetricValue(prefix+`_total`, data.AbsoluteValue)
+		setMetricValue(prefix+`_last`, data.LastValue)
+	} else {
+		// setMetricValue(prefix+`_current_min`, data.MinValue)
+		// setMetricValue(prefix+`_current_max`, data.MaxValue)
+		setMetricValue(prefix+`_lastavg`, data.LastAvgValue)
+		setMetricValue(prefix+`_lastmin`, data.LastMinValue)
+		setMetricValue(prefix+`_lastmax`, data.LastMaxValue)
+	}
+	// Parse values now
+	for _, line := range data.TableValues {
+		v := reflect.ValueOf(line)
+		switch v.Kind() {
+		case reflect.String:
+			l := line.(string)
+			if strings.HasPrefix(l, "name") {
+				continue
+			}
+			if data.CounterType == usage {
+				c := parseUsageCounter("0 " + l)
+				setLabeledUsageMetric(prefix+"_trunk", "name", c)
+			} else if data.CounterType == event {
+				c := parseEventCounter("0 " + l)
+				setLabeledCounterMetric(prefix+"_trunk", "name", c)
+			} else {
+				logDebug(prefix, "ignoring line", l)
+			}
+		}
+	}
+	return
+}
+
 func clearMetrics(prefix string) {
 	logDebug("Clear metric counters for", prefix)
 	for _, name := range metricSet.ListMetricNames() {
@@ -312,7 +401,7 @@ func clearMetrics(prefix string) {
 	}
 }
 
-func processBaseMetrics(prefix string, state c5Response) {
+func processBaseMetrics(prefix string, state c5StateResponse) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
 	if version == "" { // Workaround for typo in sessionconsole before R6.2
@@ -336,7 +425,7 @@ func processBaseMetrics(prefix string, state c5Response) {
 	setMetricValue(prefix+`_memory_max_used_percent`, memMaxUsage)
 }
 
-func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
+func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	client := http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Get(url)
@@ -346,7 +435,7 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 		return
 	}
 	defer resp.Body.Close()
-	var c5state c5Response
+	var c5state c5StateResponse
 	// logDebug("Parsing response body", resp.Body)
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
 	if err != nil {
@@ -358,7 +447,30 @@ func fetchMetrics(prefix, url string, wg *sync.WaitGroup) {
 	processBaseMetrics(prefix, c5state)
 
 	// process event and usage counters now
-	processC5Counter(prefix, c5state.CounterInfos)
+	processC5StateCounter(prefix, c5state.CounterInfos)
+}
+
+func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	client := http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		logError("Failed to connect", err)
+		clearMetrics(prefix)
+		return
+	}
+	defer resp.Body.Close()
+	var c5Resp c5CounterResponse
+	// logDebug("Parsing response body", resp.Body)
+	err = json.NewDecoder(resp.Body).Decode(&c5Resp)
+	if err != nil {
+		logError("Failed to parse response, err: ", err)
+		clearMetrics(prefix)
+		return
+	}
+
+	// process event and usage counters now
+	processC5CounterMetrics(prefix, c5Resp)
 }
 
 func main() {
@@ -391,17 +503,23 @@ func main() {
 		conf.RegistrardEnabled = true
 	}
 
-	if !(conf.SIPProxydEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled) {
+	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled) {
 		logError("No c5 processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
 
 	logDebug("Using configuration:")
 	logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
-	logDebug("- sipproxyd", conf.SIPProxydEnabled, "url", conf.SIPProxydURL)
-	logDebug("- acdqueued", conf.ACDQueuedEnabled, "url", conf.ACDQueuedURL)
-	logDebug("- registard", conf.RegistrardEnabled, "url", conf.RegistrardURL)
-
+	logDebug("- sipproxyd", conf.SIPProxydEnabled)
+	logDebug("  url:", conf.SIPProxydURL)
+	logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
+	logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
+	logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
+	logDebug("- acdqueued", conf.ACDQueuedEnabled)
+	logDebug("  url:", conf.ACDQueuedURL)
+	logDebug("- registard", conf.RegistrardEnabled)
+	logDebug("  url:", conf.RegistrardURL)
+	
 	metricSet = metrics.NewSet()
 
 	// Expose the registered metrics at `/metrics` path.
@@ -409,17 +527,26 @@ func main() {
 		var wg sync.WaitGroup
 		if conf.SIPProxydEnabled {
 			wg.Add(1)
-			go fetchMetrics("sipproxyd", conf.SIPProxydURL, &wg)
+			go fetchC5StateMetrics("sipproxyd", conf.SIPProxydURL, &wg)
 		}
 		if conf.ACDQueuedEnabled {
 			wg.Add(1)
-			go fetchMetrics("acdqueued", conf.ACDQueuedURL, &wg)
+			go fetchC5StateMetrics("acdqueued", conf.ACDQueuedURL, &wg)
 		}
 		if conf.RegistrardEnabled {
 			wg.Add(1)
-			go fetchMetrics("registrard", conf.RegistrardURL, &wg)
+			go fetchC5StateMetrics("registrard", conf.RegistrardURL, &wg)
 		}
 		wg.Wait()
+		// We need to ensure sequential processing, so wait between fetches
+		if conf.SIPProxydTrunksEnabled {
+			wg.Add(1)
+			go fetchC5CounterMetrics("sipproxyd", conf.SIPProxydTrunkStatsURL, &wg)
+			wg.Wait()
+			wg.Add(1)
+			go fetchC5CounterMetrics("sipproxyd", conf.SIPProxydTrunkLimitsURL, &wg)
+			wg.Wait()
+		}
 		metricSet.WritePrometheus(w)
 		metrics.WriteProcessMetrics(w)
 	})
