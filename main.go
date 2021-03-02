@@ -55,19 +55,19 @@ type c5StateResponse struct {
 }
 
 type c5CounterResponse struct {
-	ProxyResponseTimeStampAndState string // "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
-	CounterName       string        // "counterName" : "BT_CALLS_LIMIT_REACHED",
-	CounterType       string        // "counterType" : "EVENT",
-	AbsoluteValue     uint64        // "absoluteValue" : 0, // event only
-	CurrentValue      uint64        // "currentValue" : 0, // event only
-	LastValue         uint64        // "lastValue" : 0, // event only
-	MinValue          uint64        // "minValue" : 0, // counter only
-	MaxValue          uint64        // "maxValue" : 0, // counter only
-	LastMinValue      uint64        // "lastMinValue" : 0, // counter only
-	LastMaxValue      uint64        // "lastMaxValue" : 0, // counter only
-	LastAvgValue      uint64        // "lastAvgValue" : 0, // counter only
-	TotalValue        uint64        // "totalValue" : 0, // counter only
-	TableValues       []interface{} // "counterInfos": [ ... ]
+	ProxyResponseTimeStampAndState string        // "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+	CounterName                    string        // "counterName" : "BT_CALLS_LIMIT_REACHED",
+	CounterType                    string        // "counterType" : "EVENT",
+	AbsoluteValue                  uint64        // "absoluteValue" : 0, // event only
+	CurrentValue                   uint64        // "currentValue" : 0, // event only
+	LastValue                      uint64        // "lastValue" : 0, // event only
+	MinValue                       uint64        // "minValue" : 0, // counter only
+	MaxValue                       uint64        // "maxValue" : 0, // counter only
+	LastMinValue                   uint64        // "lastMinValue" : 0, // counter only
+	LastMaxValue                   uint64        // "lastMaxValue" : 0, // counter only
+	LastAvgValue                   uint64        // "lastAvgValue" : 0, // counter only
+	TotalValue                     uint64        // "totalValue" : 0, // counter only
+	TableValues                    []interface{} // "counterInfos": [ ... ]
 }
 
 func buildMetricName(prefix string, name string, idx *int) string {
@@ -236,6 +236,9 @@ func parseUsageCounter(line string) usageCounter {
 	// "       Usage counters                              current    min    max   lMin   lMax   lAvg",
 	// " 45 CALL_CONTROL_ACTIVE_CALLS                           0      0      0      0      0      0",
 	parts := strings.Fields(line)
+	if len(parts) < 8 {
+		return usageCounter{}
+	}
 	return usageCounter{
 		ID:      parts[0],
 		Name:    normalizeMetricName(parts[1]),
@@ -250,7 +253,6 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 	// [
 	//   " 84 TRANSACTION_AND_TU_TU_MANAGER_QUEUE_SIZE          0      0      3      0      9      0",
 	//   "                                                      0      0      3      0      4      0",
-	//   "                                                      0      0      2      0      3      0",
 	// ]
 	// Name must be derived from first line, additional index must be added
 	name := ""
@@ -259,12 +261,20 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 		idx := i
 		if i == 0 {
 			c := parseUsageCounter(line)
+			if c.Name == "" {
+				logError("Failed to parse as sub usage counter header:", line)
+				return
+			}
 			c.Idx = &idx
 			name = c.Name
 			id = c.ID
 			cnts = append(cnts, c)
 		} else {
 			parts := strings.Fields(line)
+			if len(parts) < 6 {
+				logError("Failed to parse as sub usage counter:", line)
+				continue
+			}
 			cnts = append(cnts,
 				usageCounter{
 					ID:      id,
@@ -284,6 +294,9 @@ func parseEventCounter(line string) eventCounter {
 	// "       Event counters                              absolute   curr   last",
 	// "  0 TRANSPORT_MESSAGE_IN                              6461     31     69",
 	parts := strings.Fields(line)
+	if len(parts) < 3 {
+		return eventCounter{}
+	}
 	return eventCounter{
 		ID:    parts[0],
 		Name:  normalizeMetricName(parts[1]),
@@ -291,6 +304,43 @@ func parseEventCounter(line string) eventCounter {
 	}
 }
 
+func parseSubEventCounter(lines []string) (cnts []eventCounter) {
+	// [
+	//   "425 CASS_ERR_CONN_TMO                                  0      0      0",
+	//   "                                                     131    386    518"
+	// ],
+	// Name must be derived from first line, additional index must be added
+	name := ""
+	id := ""
+	for i, line := range lines {
+		idx := i
+		if i == 0 {
+			c := parseEventCounter(line)
+			if c.Name == "" {
+				logError("Failed to parse as sub event counter header:", line)
+				return
+			}
+			c.Idx = &idx
+			name = c.Name
+			id = c.ID
+			cnts = append(cnts, c)
+		} else {
+			parts := strings.Fields(line)
+			if len(parts) < 1 {
+				logError("Failed to parse as sub event counter:", line)
+				return
+			}
+			cnts = append(cnts,
+				eventCounter{
+					ID:    id,
+					Name:  normalizeMetricName(name),
+					Idx:   &idx,
+					Total: parseUint64(parts[0]),
+				})
+		}
+	}
+	return
+}
 func processC5StateCounter(prefix string, lines []interface{}) {
 	const event, usage string = "event", "usage"
 	var cntType string
@@ -302,9 +352,18 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 			for i := 0; i < v.Len(); i++ {
 				sublines[i] = v.Index(i).Elem().String()
 			}
-			counter := parseSubUsageCounter(sublines)
-			for _, c := range counter {
-				setUsageMetric(prefix, c)
+			if cntType == usage {
+				cnts := parseSubUsageCounter(sublines)
+				for _, c := range cnts {
+					setUsageMetric(prefix, c)
+				}
+			} else if cntType == event {
+				cnts := parseSubEventCounter(sublines)
+				for _, c := range cnts {
+					setCounterMetric(prefix, c)
+				}
+			} else {
+				logDebug(prefix, "ignoring line for unknown type", sublines)
 			}
 		case reflect.String:
 			l := line.(string)
@@ -336,7 +395,7 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 	return
 }
 
-// processC5CounterMetrics will parse a counter output of type EVENT and USAGE for 
+// processC5CounterMetrics will parse a counter output of type EVENT and USAGE for
 // a specific C5 metric.
 //
 // {
@@ -519,7 +578,7 @@ func main() {
 	logDebug("  url:", conf.ACDQueuedURL)
 	logDebug("- registard", conf.RegistrardEnabled)
 	logDebug("  url:", conf.RegistrardURL)
-	
+
 	metricSet = metrics.NewSet()
 
 	// Expose the registered metrics at `/metrics` path.
