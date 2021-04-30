@@ -41,9 +41,9 @@ nfpms:
     # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}`
     # name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
-    vendor: NeoTel Telefonservice GmbH & Co KG
-    homepage: https://git.neotel.at/neotel/c5-exporter
-    maintainer: Roland Lammel <rl@neotel.at>
+    vendor: Communi5 Technologies GmbH
+    homepage: https://github.com/communi5/prometheus-c5-exporter/
+    maintainer: Robert Traussnig<r.traussnig@communi5.com>
     description: A prometheus exporter for C5 application processes
     license: Commercial
 
