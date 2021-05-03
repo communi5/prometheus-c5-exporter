@@ -1,8 +1,90 @@
-# c5-exporter
+# Prometheus C5 Exporter
 
 A prometheus exporter for C5 application processes
 
-## Example output
+## About
+
+The prometheus-c5-exporter daemon listens on a dedicated port for incoming
+queries of a [Prometheus](https://prometheus.io) server and queries local C5 processes for metric data.
+
+The metrics are collected using an internal REST based format of the supported 
+C5 daemons. The reponses are parsed, adjusted in naming, labels added where required 
+and written in Prometheus [text format](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format).
+
+Currently supported C5 processes are:
+
+- C5 Proxy `sipproxyd`
+- C5 ACD Queue `acdqueued`
+- C5 Registrar `registrard`
+- C5 Notification Server `notification-server`
+
+These metrics are usually displayed with [Grafana](https://grafana.com). Dashboards are included 
+for basic visualization.
+
+## Installation and Configuration
+
+To install promtheus-c5-exporter it is recommended to use the provided
+packages.
+
+After package installation a systemd unit is available for controlling the c5-exporter. A user `prometheus` will be created during installation if not yet existing.
+
+### Configuration
+
+Only minimal configuration is required. Querying for a particular endpoint 
+can be disabled to avoid spurios warnings in the logs.
+
+Example configuration:
+
+```
+listenAddress = ":9055"
+
+### Query sipproxyd process
+sipproxydEnabled = true
+sipproxydTrunksEnabled = true
+
+### Query acdqueued process
+acdqueuedEnabled = true
+
+### Query registard process
+registrardEnabled = false
+
+### Query notification-server process
+notificationEnabled = false
+```
+
+## Building and Packaging
+
+To build prometheus-c5-exporter only a recent Go version (v1.15+) is required.
+
+For a quick build use: 
+
+    go build main.go
+
+To build a static binary use: 
+
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags '-s -w' -o c5exporter main.go
+
+### Using Visual Studio Code
+
+Tasks for Visual Studio Code are available to simplify testing and building of the application. The "Go for Visual Studio Code" plugin is also recommended.
+
+To run the tasks in Visual Studio use:
+- Use the command palette (`Ctrl-Shift-P`) and choose "Tasks: Run Task"
+- Choose a task like `Build Static` or `Build tagged release package`
+
+A quick binary build can be run using `Ctrl-Shift-B`.
+
+### Packaging
+
+To create native packages for Debian/Ubuntu or Red Hat Linux a tool called [goreleaser](https://github.com/goreleaser/goreleaser) is required.
+
+To package an offical version be sure to follow these steps:
+
+- Create a version tag (e.g. `v1.0.3`)
+- Ensure to have a clean workspace (no uncommitted files)
+- Run `goreleaser release --skip-publish --rm-dist`
+
+## Parsing of C5 Metrics
 
 An example output for the internal C5 REST endpoint as used by sessionconsole is seen here:
 
@@ -92,4 +174,22 @@ An example output for the internal C5 REST endpoint as used by sessionconsole is
 	  ]
 	]
 }
+```
+
+This will be parsed and automatic naming will be applied. For a running
+
+Example response for a prometheus query to `http://<host>:9055/metrics`:
+
+```
+registrard_audit_ua_session_released_total 0
+registrard_cass_err_conn_tmo_total{idx="0"} 0
+registrard_cass_err_pending_requ_tmo_total{idx="0"} 0
+registrard_cass_err_requ_tmo_total{idx="0"} 0
+registrard_cluster_active_registrations_current 0
+registrard_cluster_active_registrations_lastavg 0
+registrard_cluster_active_registrations_lastmax 0
+registrard_cluster_active_registrations_lastmin 0
+registrard_connected_session_timeout_total 0
+registrard_database_errors_total 0
+registrard_database_nosql_errors_total 0
 ```
