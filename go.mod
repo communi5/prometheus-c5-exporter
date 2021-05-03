@@ -1,4 +1,4 @@
-module git.neotel.at/neotel/c5-exporter
+module github.com/communi5/prometheus-c5-exporter
 
 go 1.15
 
