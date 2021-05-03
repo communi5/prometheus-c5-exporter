@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"git.neotel.at/neotel/c5-exporter/config"
+	"github.com/communi5/prometheus-c5-exporter/config"
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/jinzhu/configor"
 )
@@ -579,7 +579,7 @@ func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
 	logDebug("fetchC5XmsMetrics: start")	
 	defer wg.Done()
 	// disable security check for a client
-	// Failed to connect Get "https://10.220.12.55:10443/resource/counters": x509: cannot validate certificate for 10.220.12.55 because it doesn't contain any IP SANs
+	// Failed to connect Get "https://127.0.0.1:10443/resource/counters": x509: cannot validate certificate for xms because it doesn't contain any IP SANs
 	tr := &http.Transport{
         	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
     	}
@@ -602,12 +602,12 @@ func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
 		return
 	}
 	defer resp.Body.Close()
-	
+
 	// activate struct for xml
 	var webService WebService 
 
 	logDebug("Parsing response body", resp.Body)
-	
+
 	// parse and decode xml to structure
 	err = xml.NewDecoder(resp.Body).Decode(&webService) 
 
@@ -640,16 +640,14 @@ func processXmsResourceCountersMetrics(prefix string, counters ResourceCounters)
 func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses) {
 
 	for _ , item := range licenses.Resources {
-        	//logDebug("fetchC5XmsMetrics: ", i, "     Id: ", item.Id) //xml
+		//logDebug("fetchC5XmsMetrics: ", i, "     Id: ", item.Id) //xml
 		prefixplus := prefix+`_`+item.Id+`_`
-		
 		total, _ := strconv.ParseUint(item.Total, 0, 64)
 		used, _ := strconv.ParseUint(item.Used, 0, 64)
 		free, _ := strconv.ParseUint(item.Free, 0, 64)
 		percUsed, _ := strconv.ParseUint(item.PercUsed, 0, 64)
 		allocated, _ := strconv.ParseUint(item.Allocated, 0, 64)
 		//logDebug("fetchC5XmsMetrics: ", prefixplus+`total`,":", total) //xml
-		
 		setMetricValue(prefixplus+`total`, total)
 		setMetricValue(prefixplus+`used`, used)
 		setMetricValue(prefixplus+`free`, free)
@@ -683,16 +681,20 @@ func main() {
 		// Reparse commandline flags to override loaded config parameters
 		flag.Parse()
 	} else {
-		logInfo("No configuration file used. Enabling querying of all XMS processes.")
+		logInfo("No configuration file used. Enabling querying of all C5 and XMS processes.")
 		conf.ResourceCountersEnabled = true
 		conf.ResourceLicensesEnabled = true
+		conf.SIPProxydEnabled = true
+		conf.ACDQueuedEnabled = true
+		conf.RegistrardEnabled = true
+		conf.NotificationEnabled = true
 	}
 
-	if !(conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
-		logError("No c5 XMS processes enabled to query. Please enable at least on process in configuration.")
+	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
+		logError("No c5 or XMS processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
-
+	logJsonDebug()
 	logXmsDebug()
 
 	metricSet = metrics.NewSet()
@@ -722,10 +724,10 @@ func main() {
 			wg.Add(1)
 			go fetchC5StateMetrics("registrard", conf.RegistrardURL, &wg)
 		}
-        if conf.NotificationEnabled {
-            wg.Add(1)
-            go fetchC5StateMetrics("notificationServer", conf.NotificationURL, &wg)
-        }
+		if conf.NotificationEnabled {
+			wg.Add(1)
+			go fetchC5StateMetrics("notificationServer", conf.NotificationURL, &wg)
+		}
 		wg.Wait()
 		// We need to ensure sequential processing, so wait between fetches
 		if conf.SIPProxydTrunksEnabled {
