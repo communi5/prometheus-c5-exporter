@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"crypto/tls"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -44,7 +46,7 @@ type c5StateResponse struct {
 	ProxyState       string        // "proxyState" : "active", // sipproxyd only
 	QueueState       string        // "queueState" : "active", // acdqueued only
 	RegistrarState   string        // "registrarState" : "active", // registar only
-	NotificationState string       // "notificationServerState" : "active", // notification server only
+    NotificationState string       // "notificationServerState" : "active", // notification server only
 	BuildVersion     string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
 	BuildVersionOld  string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
 	StartupTime      string        // "startupTime" : "2020-01-19 04:01:04.503",
@@ -533,6 +535,130 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	processC5CounterMetrics(prefix, c5Resp)
 }
 
+
+// ---------------------------- XML struct For XMS REST API
+
+type WebService struct {
+	XMLName    xml.Name  `xml:"web_service"`
+	Version    string    `xml:"version,attr"`
+	Response   Response  `xml:"response"`
+}
+
+type Response struct {
+	XMLName     xml.Name `xml:"response"`
+	ResourceLicenses ResourceLicenses `xml:"resource_licenses"`
+	ResourceCounters ResourceCounters `xml:"resource_counters"`
+}
+
+type ResourceLicenses struct {
+	XMLName     xml.Name `xml:"resource_licenses"`
+    	Resources   []Resource   `xml:"resource"`
+}
+
+type ResourceCounters struct {
+	XMLName     xml.Name `xml:"resource_counters"`
+    	Resources   []Resource   `xml:"resource"`
+}
+
+type Resource struct {
+	XMLName    xml.Name `xml:"resource"`
+	Id	   string   `xml:"id,attr"`
+	Display    string   `xml:"display_name,attr"`
+	// ResourceCounters, ResourceActive
+	Value      uint64   `xml:"value,attr"`
+	// ResourceLicenses only
+	Total	   string   `xml:"total,attr"`
+	Used	   string   `xml:"used,attr"`
+	Free	   string   `xml:"free,attr"`
+	PercUsed   string   `xml:"percent_used,attr"`
+	Allocated  string   `xml:"allocated,attr"`
+}
+// ---------------------------- Fetch For XMS REST API
+
+func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
+	logDebug("fetchC5XmsMetrics: start")	
+	defer wg.Done()
+	// disable security check for a client
+	// Failed to connect Get "https://10.220.12.55:10443/resource/counters": x509: cannot validate certificate for 10.220.12.55 because it doesn't contain any IP SANs
+	tr := &http.Transport{
+        	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+    	}
+    	
+	//client := http.Client{Timeout: 2 * time.Second}
+	client := http.Client{Timeout: 2 * time.Second, Transport: tr}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.SetBasicAuth("admin", "admin")
+
+	// Make request and show output
+	resp, err := client.Do(req)
+	//resp, err := client.Get(url)
+	if err != nil {
+		logError("Failed to connect", err)
+		clearMetrics(prefix)
+		return
+	}
+	defer resp.Body.Close()
+	
+	// activate struct for xml
+	var webService WebService 
+
+	logDebug("Parsing response body", resp.Body)
+	
+	// parse and decode xml to structure
+	err = xml.NewDecoder(resp.Body).Decode(&webService) 
+
+	if err != nil {
+		logError("Failed to parse response, err: ", err)
+		clearMetrics(prefix)
+		return
+	}
+
+	// fetch and set metrics
+	if (prefix == "resourcecounters") {
+		processXmsResourceCountersMetrics(prefix, webService.Response.ResourceCounters)
+	} else {
+		processXmsResourceLicensesMetrics(prefix, webService.Response.ResourceLicenses)
+	}
+}
+
+func processXmsResourceCountersMetrics(prefix string, counters ResourceCounters) {
+	//id sent_sip_invites
+	sentSipInvites := counters.Resources[1].Value
+	setMetricValue(prefix+`_sent_sip_invites`, sentSipInvites)
+
+	receivedSipInvites := counters.Resources[2].Value
+	setMetricValue(prefix+`_received_sip_responses`, receivedSipInvites)
+
+	sentSipResponses := counters.Resources[3].Value
+	setMetricValue(prefix+`_sent_sip_responses`, sentSipResponses)
+}
+
+func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses) {
+
+	for _ , item := range licenses.Resources {
+        	//logDebug("fetchC5XmsMetrics: ", i, "     Id: ", item.Id) //xml
+		prefixplus := prefix+`_`+item.Id+`_`
+		
+		total, _ := strconv.ParseUint(item.Total, 0, 64)
+		used, _ := strconv.ParseUint(item.Used, 0, 64)
+		free, _ := strconv.ParseUint(item.Free, 0, 64)
+		percUsed, _ := strconv.ParseUint(item.PercUsed, 0, 64)
+		allocated, _ := strconv.ParseUint(item.Allocated, 0, 64)
+		//logDebug("fetchC5XmsMetrics: ", prefixplus+`total`,":", total) //xml
+		
+		setMetricValue(prefixplus+`total`, total)
+		setMetricValue(prefixplus+`used`, used)
+		setMetricValue(prefixplus+`free`, free)
+		setMetricValue(prefixplus+`percent_used`, percUsed)
+		setMetricValue(prefixplus+`allocated`, allocated)
+	}
+}
+// ---------------------------- Main
+
 func main() {
 
 	conf := config.AppConfig
@@ -557,37 +683,33 @@ func main() {
 		// Reparse commandline flags to override loaded config parameters
 		flag.Parse()
 	} else {
-		logInfo("No configuration file used. Enabling querying of all C5 processes.")
-		conf.SIPProxydEnabled = true
-		conf.ACDQueuedEnabled = true
-		conf.RegistrardEnabled = true
-		conf.NotificationEnabled = true
+		logInfo("No configuration file used. Enabling querying of all XMS processes.")
+		conf.ResourceCountersEnabled = true
+		conf.ResourceLicensesEnabled = true
 	}
 
-	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled) {
-		logError("No c5 processes enabled to query. Please enable at least on process in configuration.")
+	if !(conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
+		logError("No c5 XMS processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
 
-	logDebug("Using configuration:")
-	logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
-	logDebug("- sipproxyd", conf.SIPProxydEnabled)
-	logDebug("  url:", conf.SIPProxydURL)
-	logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
-	logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
-	logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
-	logDebug("- acdqueued", conf.ACDQueuedEnabled)
-	logDebug("  url:", conf.ACDQueuedURL)
-	logDebug("- registard", conf.RegistrardEnabled)
-	logDebug("  url:", conf.RegistrardURL)
-	logDebug("- notification-server", conf.NotificationEnabled)
-        logDebug("  url:", conf.NotificationURL)
+	logXmsDebug()
 
 	metricSet = metrics.NewSet()
 
 	// Expose the registered metrics at `/metrics` path.
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
+		// --- XMS5 Metrics
+		if conf.ResourceCountersEnabled {
+			wg.Add(1)
+			go fetchC5XmsMetrics("resourcecounters", conf.ResourceCountersURL, &wg)
+		}
+		if conf.ResourceLicensesEnabled {
+			wg.Add(1)
+			go fetchC5XmsMetrics("resourcelicenses", conf.ResourceLicensesURL, &wg)
+		}
+		// --- C5 Metrics
 		if conf.SIPProxydEnabled {
 			wg.Add(1)
 			go fetchC5StateMetrics("sipproxyd", conf.SIPProxydURL, &wg)
@@ -600,10 +722,10 @@ func main() {
 			wg.Add(1)
 			go fetchC5StateMetrics("registrard", conf.RegistrardURL, &wg)
 		}
-		if conf.NotificationEnabled {
-			wg.Add(1)
-			go fetchC5StateMetrics("notificationServer", conf.NotificationURL, &wg)
-		}
+        if conf.NotificationEnabled {
+            wg.Add(1)
+            go fetchC5StateMetrics("notificationServer", conf.NotificationURL, &wg)
+        }
 		wg.Wait()
 		// We need to ensure sequential processing, so wait between fetches
 		if conf.SIPProxydTrunksEnabled {
@@ -635,4 +757,35 @@ func logDebug(msg ...interface{}) {
 
 func logError(msg ...interface{}) {
 	log.Print("[ERROR] ", fmt.Sprintln(msg...))
+}
+
+func logJsonDebug() {
+	conf := config.AppConfig
+	if conf.JsonDebugEnabled {
+        logDebug("Using configuration:")
+        logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
+        logDebug("- sipproxyd", conf.SIPProxydEnabled)
+        logDebug("  url:", conf.SIPProxydURL)
+        logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
+        logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
+        logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
+        logDebug("- acdqueued", conf.ACDQueuedEnabled)
+        logDebug("  url:", conf.ACDQueuedURL)
+        logDebug("- registard", conf.RegistrardEnabled)
+        logDebug("  url:", conf.RegistrardURL)
+        logDebug("- notification-server", conf.NotificationEnabled)
+        logDebug("  url:", conf.NotificationURL)
+	}
+}
+
+func logXmsDebug() {
+	conf := config.AppConfig
+	if conf.XmsDebugEnabled {
+		logDebug("Using configuration:")
+		logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
+		logDebug("- resourcecounters", conf.ResourceCountersEnabled)
+		logDebug("  url:", conf.ResourceCountersURL)
+		logDebug("- resourcelicenses", conf.ResourceLicensesEnabled)
+		logDebug("  url:", conf.ResourceLicensesURL)
+	}
 }
