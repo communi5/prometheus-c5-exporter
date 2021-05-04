@@ -19,6 +19,8 @@ Currently supported C5 processes are:
 - C5 CSTAGW `cstagwd`
 - C5 Notification Server `notification-server`
 
+additional 3rd party exporter included for Dialogic XMS metrics/licenses monitoring
+
 These metrics are usually displayed with [Grafana](https://grafana.com). Dashboards are included 
 for basic visualization.
 
@@ -54,6 +56,11 @@ cstaEnabled = false
 
 ### Query notification-server process
 notificationEnabled = false
+
+### 3rd party XMS
+resourceCountersEnabled = false
+resourceLicensesEnabled = false
+
 ```
 
 ## Building and Packaging
