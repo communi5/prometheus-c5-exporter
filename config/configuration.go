@@ -26,4 +26,6 @@ type AppConfiguration struct {
 	RegistrardURL           string `default:"http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"`
 	NotificationEnabled     bool
 	NotificationURL         string `default:"http://127.0.0.1:9988/c5/proxy/commands?49&1&-v"`
+	CstaEnabled		bool
+	CstaURL			string `default:"http://127.0.0.1:9986/c5/proxy/commands?49&1&-v"`
 }

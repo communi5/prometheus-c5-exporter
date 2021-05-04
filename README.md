@@ -16,6 +16,7 @@ Currently supported C5 processes are:
 - C5 Proxy `sipproxyd`
 - C5 ACD Queue `acdqueued`
 - C5 Registrar `registrard`
+- C5 CSTAGW `cstagwd`
 - C5 Notification Server `notification-server`
 
 These metrics are usually displayed with [Grafana](https://grafana.com). Dashboards are included 
@@ -47,6 +48,9 @@ acdqueuedEnabled = true
 
 ### Query registard process
 registrardEnabled = false
+
+### Query cstagwd process
+cstaEnabled = false
 
 ### Query notification-server process
 notificationEnabled = false

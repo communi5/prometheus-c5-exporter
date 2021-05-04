@@ -46,7 +46,8 @@ type c5StateResponse struct {
 	ProxyState       string        // "proxyState" : "active", // sipproxyd only
 	QueueState       string        // "queueState" : "active", // acdqueued only
 	RegistrarState   string        // "registrarState" : "active", // registar only
-    NotificationState string       // "notificationServerState" : "active", // notification server only
+	NotificationServerState string       // "notificationServerState" : "active", // notification server only
+	CstaState string		// "cstaState" : "active", //cstagw only
 	BuildVersion     string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
 	BuildVersionOld  string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
 	StartupTime      string        // "startupTime" : "2020-01-19 04:01:04.503",
@@ -477,7 +478,7 @@ func processBaseMetrics(prefix string, state c5StateResponse) {
 	setMetricValue(prefix+`_info{version="`+version+`",starttime="`+startupTime+`"}`, 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
-	setMetricValue(prefix+`_state`, parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState, state.NotificationState))
+	setMetricValue(prefix+`_state`, parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState, state.NotificationServerState, state.CstaState))
 	setMetricValue(prefix+`_tu_queue_state`, parseQueueStateString(state.TuQueueStatus))
 
 	// Set process state (usually active=1 or inactive=0)
@@ -688,9 +689,10 @@ func main() {
 		conf.ACDQueuedEnabled = true
 		conf.RegistrardEnabled = true
 		conf.NotificationEnabled = true
+		conf.CstaEnabled = true
 	}
 
-	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
+	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.CstaEnabled || conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
 		logError("No c5 or XMS processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
@@ -726,8 +728,13 @@ func main() {
 		}
 		if conf.NotificationEnabled {
 			wg.Add(1)
-			go fetchC5StateMetrics("notificationServer", conf.NotificationURL, &wg)
+			go fetchC5StateMetrics("notification", conf.NotificationURL, &wg)
 		}
+		if conf.CstaEnabled {
+                        wg.Add(1)
+                        go fetchC5StateMetrics("cstagwd", conf.CstaURL, &wg)
+                }
+
 		wg.Wait()
 		// We need to ensure sequential processing, so wait between fetches
 		if conf.SIPProxydTrunksEnabled {

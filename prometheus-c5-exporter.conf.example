@@ -17,6 +17,10 @@ acdqueuedEnabled = true
 registrardEnabled = true
 # registrardURL = "http://127.0.0.1:9984/c5/proxy/commands?49&1&-v"
 
+### Query cstagwd process
+cstaEnabled = true
+# cstaURL = "http://127.0.0.1:9986/c5/proxy/commands?49&1&-v"
+
 ### Query notification-server process
 notificationEnabled = true
 # notificationURL = "http://127.0.0.1:9988/c5/proxy/commands?49&1&-v"
