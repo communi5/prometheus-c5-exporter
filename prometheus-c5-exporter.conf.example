@@ -24,3 +24,10 @@ cstaEnabled = true
 ### Query notification-server process
 notificationEnabled = true
 # notificationURL = "http://127.0.0.1:9988/c5/proxy/commands?49&1&-v"
+#
+
+### 3rd party XMS
+resourceCountersEnabled = false
+#resourceCountersURL = "http://localhost:10080/resource/counters"
+resourceLicensesEnabled = false
+#resourceLicensesURL = "http://localhost:10080/resource/licenses"
