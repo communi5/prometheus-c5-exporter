@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.0.4"
+const version = "1.1.0"
 
 // Global metric set
 var metricSet *metrics.Set
