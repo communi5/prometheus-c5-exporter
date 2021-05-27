@@ -362,6 +362,12 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 					setUsageMetric(prefix, c)
 				}
 			} else if cntType == event {
+				// Workaround for CSTAGW
+				// see https://github.com/communi5/prometheus-c5-exporter/issues/1
+				if prefix == "cstagwd" && len(sublines) < 2 {
+					logDebug("Ignore invalid event sublines for cstagwd", sublines)
+					continue
+				}
 				cnts := parseSubEventCounter(sublines)
 				for _, c := range cnts {
 					setCounterMetric(prefix, c)
