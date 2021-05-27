@@ -765,35 +765,30 @@ func logError(msg ...interface{}) {
 
 func logConfig() {
 	conf := config.AppConfig
-	if conf.Debug {
-		logDebug("Using configuration")
-		logDebug("  debug =", conf.Debug)
-		logDebug("  listenAddress =", conf.ListenAddress)
-		logDebug("  sipproxyd enabled =", conf.SIPProxydEnabled)
+	logDebug(fmt.Sprintf("Using configuration: %+v", conf))
 	if conf.SIPProxydEnabled {
-			logDebug("  url:", conf.SIPProxydURL)
+		logInfo("sipproxyd enabled with url", conf.SIPProxydURL)
 	}
-		logDebug("  sipproxyd-trunk enabled:", conf.SIPProxydTrunksEnabled)
-		if conf.SIPProxydTrunksEnabled {
-			logDebug("    url stats:", conf.SIPProxydTrunkStatsURL)
-			logDebug("    url limit:", conf.SIPProxydTrunkLimitsURL)
-		}
-		logDebug("  acdqueued enabled:", conf.ACDQueuedEnabled)
 	if conf.ACDQueuedEnabled {
-			logDebug("    url:", conf.ACDQueuedURL)
+		logInfo("acdqueued enabled with url", conf.ACDQueuedURL)
 	}
-		logDebug("  registard enabled:", conf.RegistrardEnabled)
 	if conf.RegistrardEnabled {
-			logDebug("    url:", conf.RegistrardURL)
+		logInfo("registrard enabled with url", conf.RegistrardURL)
 	}
-		logDebug("  notification-server enabled:", conf.NotificationEnabled)
+	if conf.SIPProxydTrunksEnabled {
+		logInfo("sipproxyd trunks enabled with:")
+		logInfo("- stats url:", conf.SIPProxydTrunkStatsURL)
+		logInfo("- limits url:", conf.SIPProxydTrunkLimitsURL)
+	}
 	if conf.NotificationEnabled {
-			logDebug("    url:", conf.NotificationURL)
+		logDebug("notification-server enabled with url:", conf.NotificationURL)
 	}
-		logDebug("  xms enabled:", conf.XmsEnabled)
+	if conf.CstaEnabled {
+		logDebug("cstagwd enabled with url:", conf.CstaURL)
+	}
 	if conf.XmsEnabled {
-			logDebug("    url counter:", conf.XmsCountersURL)
-			logDebug("    url license:", conf.XmsLicensesURL)
-		}
+		logInfo("xms enabled with user", conf.XmsUser)
+		logInfo("- counters url:", conf.XmsCountersURL)
+		logInfo("- licenses url:", conf.XmsLicensesURL)
 	}
 }
