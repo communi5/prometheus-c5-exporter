@@ -583,7 +583,8 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 	// Failed to connect Get "https://127.0.0.1:10443/resource/counters":
 	//   x509: cannot validate certificate for XMS because it doesn't contain any IP SANs
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+		DisableKeepAlives: true,
 	}
 	client := http.Client{Timeout: 2 * time.Second, Transport: tr}
 
@@ -591,11 +592,10 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.SetBasicAuth("admin", "admin")
+	req.SetBasicAuth(user, pwd)
 
 	// Make request and show output
 	resp, err := client.Do(req)
-	//resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
 		clearMetrics(prefix)
@@ -606,16 +606,16 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 	// activate struct for xml
 	var webService WebService
 
-	logDebug("Parsing response body", resp.Body)
-
 	// parse and decode xml to structure
 	err = xml.NewDecoder(resp.Body).Decode(&webService)
 
 	if err != nil {
-		logError("Failed to parse response, err: ", err)
+		logError("Failed to parse response for prefix", prefix, " with error:", err)
 		clearMetrics(prefix)
 		return
 	}
+
+	logDebug(fmt.Sprintf("Parsing XMS response body for prefix %s succeeded: %+v", prefix, webService))
 
 	// fetch and set metrics
 	if prefix == "xms_counter" {
