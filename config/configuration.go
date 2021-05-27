@@ -10,6 +10,8 @@ type AppConfiguration struct {
 
 	// XMS Configuration
 	XmsEnabled     bool
+	XmsUser        string `default:"admin"`
+	XmsPwd         string `default:"admin"`
 	XmsCountersURL string `default:"http://localhost:10080/resource/counters"`
 	XmsLicensesURL string `default:"http://localhost:10080/resource/licenses"`
 

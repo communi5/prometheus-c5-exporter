@@ -27,5 +27,7 @@ notificationEnabled = true
 
 ### 3rd party XMS
 xmsEnabled = false
+#xmsUser = "admin"
+#xmsPwd = "admin"
 #xmsCountersURL = "http://localhost:10080/resource/counters"
 #xmsLicensesURL = "http://localhost:10080/resource/licenses"

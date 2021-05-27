@@ -576,7 +576,7 @@ type Resource struct {
 
 // ---------------------------- Fetch For XMS REST API
 
-func fetchXmsMetrics(prefix, url string, wg *sync.WaitGroup) {
+func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitGroup) {
 	logDebug("fetchXmsMetrics with prefix ", prefix, "from url", url)
 	defer wg.Done()
 	// Disable of certificate checks required for XMS in case HTTPS is used
@@ -705,8 +705,8 @@ func main() {
 		// --- XMS5 Metrics
 		if conf.XmsEnabled {
 			wg.Add(2)
-			go fetchXmsMetrics("xms_counter", conf.XmsCountersURL, &wg)
-			go fetchXmsMetrics("xms_license", conf.XmsLicensesURL, &wg)
+			go fetchXmsMetrics("xms_counter", conf.XmsCountersURL, conf.XmsUser, conf.XmsPwd, &wg)
+			go fetchXmsMetrics("xms_license", conf.XmsLicensesURL, conf.XmsUser, conf.XmsPwd, &wg)
 		}
 		// --- C5 Metrics
 		if conf.SIPProxydEnabled {
@@ -770,28 +770,28 @@ func logConfig() {
 		logDebug("  debug =", conf.Debug)
 		logDebug("  listenAddress =", conf.ListenAddress)
 		logDebug("  sipproxyd enabled =", conf.SIPProxydEnabled)
-		if conf.SIPProxydEnabled {
+	if conf.SIPProxydEnabled {
 			logDebug("  url:", conf.SIPProxydURL)
-		}
+	}
 		logDebug("  sipproxyd-trunk enabled:", conf.SIPProxydTrunksEnabled)
 		if conf.SIPProxydTrunksEnabled {
 			logDebug("    url stats:", conf.SIPProxydTrunkStatsURL)
 			logDebug("    url limit:", conf.SIPProxydTrunkLimitsURL)
 		}
 		logDebug("  acdqueued enabled:", conf.ACDQueuedEnabled)
-		if conf.ACDQueuedEnabled {
+	if conf.ACDQueuedEnabled {
 			logDebug("    url:", conf.ACDQueuedURL)
-		}
+	}
 		logDebug("  registard enabled:", conf.RegistrardEnabled)
-		if conf.RegistrardEnabled {
+	if conf.RegistrardEnabled {
 			logDebug("    url:", conf.RegistrardURL)
-		}
+	}
 		logDebug("  notification-server enabled:", conf.NotificationEnabled)
-		if conf.NotificationEnabled {
+	if conf.NotificationEnabled {
 			logDebug("    url:", conf.NotificationURL)
-		}
+	}
 		logDebug("  xms enabled:", conf.XmsEnabled)
-		if conf.XmsEnabled {
+	if conf.XmsEnabled {
 			logDebug("    url counter:", conf.XmsCountersURL)
 			logDebug("    url license:", conf.XmsLicensesURL)
 		}
