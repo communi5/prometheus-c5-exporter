@@ -106,19 +106,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcecounters_received_sip_responses{instance=~\"$instance\"}",
+          "expr": "xms_counter_received_sip_responses{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Received SIP Responses ",
           "refId": "A"
         },
         {
-          "expr": "resourcecounters_sent_sip_invites{instance=~\"$instance\"}",
+          "expr": "xms_counter_sent_sip_invites{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Sent SIP Invites",
           "refId": "B"
         },
         {
-          "expr": "resourcecounters_sent_sip_responses{instance=~\"$instance\"}",
+          "expr": "xms_counter_sent_sip_responses{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Sent SIP Responses ",
           "refId": "C"
@@ -224,13 +224,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_basic_audio_used{instance=~\"$instance\"}",
+          "expr": "xms_license_basic_audio_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "D"
         },
         {
-          "expr": "resourcelicenses_basic_audio_free{instance=~\"$instance\"}",
+          "expr": "xms_license_basic_audio_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "E"
@@ -334,13 +334,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_lbr_audio_used{instance=~\"$instance\"}",
+          "expr": "xms_license_lbr_audio_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_lbr_audio_free{instance=~\"$instance\"}",
+          "expr": "xms_license_lbr_audio_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -444,13 +444,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_gsmamr_audio_used{instance=~\"$instance\"}",
+          "expr": "xms_license_gsmamr_audio_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_gsmamr_audio_free{instance=~\"$instance\"}",
+          "expr": "xms_license_gsmamr_audio_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -554,13 +554,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_hd_voice_used{instance=~\"$instance\"}",
+          "expr": "xms_license_hd_voice_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_hd_voice_free{instance=~\"$instance\"}",
+          "expr": "xms_license_hd_voice_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -664,13 +664,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_ipcc_used{instance=~\"$instance\"}",
+          "expr": "xms_license_ipcc_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_ipcc_free{instance=~\"$instance\"}",
+          "expr": "xms_license_ipcc_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -774,13 +774,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_advanced_video_used{instance=~\"$instance\"}",
+          "expr": "xms_license_advanced_video_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_advanced_video_free{instance=~\"$instance\"}",
+          "expr": "xms_license_advanced_video_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -884,13 +884,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_high_res_video_used{instance=~\"$instance\"}",
+          "expr": "xms_license_high_res_video_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_high_res_video_free{instance=~\"$instance\"}",
+          "expr": "xms_license_high_res_video_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -996,13 +996,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_mrcp_speech_server_used{instance=~\"$instance\"}",
+          "expr": "xms_license_mrcp_speech_server_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_mrcp_speech_server_free{instance=~\"$instance\"}",
+          "expr": "xms_license_mrcp_speech_server_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -1106,13 +1106,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_msrp_used{instance=~\"$instance\"}",
+          "expr": "xms_license_msrp_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_msrp_free{instance=~\"$instance\"}",
+          "expr": "xms_license_msrp_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -1216,13 +1216,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "resourcelicenses_fax_used{instance=~\"$instance\"}",
+          "expr": "xms_license_fax_used{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
-          "expr": "resourcelicenses_fax_free{instance=~\"$instance\"}",
+          "expr": "xms_license_fax_free{instance=~\"$instance\"}",
           "interval": "",
           "legendFormat": "Free",
           "refId": "B"
@@ -1280,15 +1280,11 @@
         "current": {
           "selected": true,
           "tags": [],
-          "text": [
-            "3rd-xms-3:9055"
-          ],
-          "value": [
-            "3rd-xms-3:9055"
-          ]
+          "text": ["3rd-xms-3:9055"],
+          "value": ["3rd-xms-3:9055"]
         },
         "datasource": null,
-        "definition": "label_values(resourcelicenses_basic_audio_used, instance)",
+        "definition": "label_values(xms_license_basic_audio_used, instance)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -1298,7 +1294,7 @@
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(resourcelicenses_basic_audio_used, instance)",
+          "query": "label_values(xms_license_basic_audio_used, instance)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
