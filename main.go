@@ -1,13 +1,13 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"crypto/tls"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/communi5/prometheus-c5-exporter/config"
 	"github.com/VictoriaMetrics/metrics"
+	"github.com/communi5/prometheus-c5-exporter/config"
 	"github.com/jinzhu/configor"
 )
 
@@ -43,19 +43,19 @@ type usageCounter struct {
 }
 
 type c5StateResponse struct {
-	ProxyState       string        // "proxyState" : "active", // sipproxyd only
-	QueueState       string        // "queueState" : "active", // acdqueued only
-	RegistrarState   string        // "registrarState" : "active", // registar only
-	NotificationServerState string       // "notificationServerState" : "active", // notification server only
-	CstaState string		// "cstaState" : "active", //cstagw only
-	BuildVersion     string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
-	BuildVersionOld  string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
-	StartupTime      string        // "startupTime" : "2020-01-19 04:01:04.503",
-	StartupTimeOld   string        `json:"startupTime:"` // Workaround for typo in "startupTime:" (trailing colon) before R6.2
-	MemoryUsage      string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
-	TuQueueStatus    string        // "tuQueueStatus" : "OK - checked: 1830",
-	CounterInfos     []interface{} // "counterInfos": [ ... ]
-	AlarmedTrapInfos []interface{} // "alarmedTrapInfos": [ ... ]
+	ProxyState              string        // "proxyState" : "active", // sipproxyd only
+	QueueState              string        // "queueState" : "active", // acdqueued only
+	RegistrarState          string        // "registrarState" : "active", // registar only
+	NotificationServerState string        // "notificationServerState" : "active", // notification server only
+	CstaState               string        // "cstaState" : "active", //cstagw only
+	BuildVersion            string        // "buildVersion": "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
+	BuildVersionOld         string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
+	StartupTime             string        // "startupTime" : "2020-01-19 04:01:04.503",
+	StartupTimeOld          string        `json:"startupTime:"` // Workaround for typo in "startupTime:" (trailing colon) before R6.2
+	MemoryUsage             string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
+	TuQueueStatus           string        // "tuQueueStatus" : "OK - checked: 1830",
+	CounterInfos            []interface{} // "counterInfos": [ ... ]
+	AlarmedTrapInfos        []interface{} // "alarmedTrapInfos": [ ... ]
 }
 
 type c5CounterResponse struct {
@@ -536,55 +536,55 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	processC5CounterMetrics(prefix, c5Resp)
 }
 
-
 // ---------------------------- XML struct For XMS REST API
 
 type WebService struct {
-	XMLName    xml.Name  `xml:"web_service"`
-	Version    string    `xml:"version,attr"`
-	Response   Response  `xml:"response"`
+	XMLName  xml.Name `xml:"web_service"`
+	Version  string   `xml:"version,attr"`
+	Response Response `xml:"response"`
 }
 
 type Response struct {
-	XMLName     xml.Name `xml:"response"`
+	XMLName          xml.Name         `xml:"response"`
 	ResourceLicenses ResourceLicenses `xml:"resource_licenses"`
 	ResourceCounters ResourceCounters `xml:"resource_counters"`
 }
 
 type ResourceLicenses struct {
-	XMLName     xml.Name `xml:"resource_licenses"`
-    	Resources   []Resource   `xml:"resource"`
+	XMLName   xml.Name   `xml:"resource_licenses"`
+	Resources []Resource `xml:"resource"`
 }
 
 type ResourceCounters struct {
-	XMLName     xml.Name `xml:"resource_counters"`
-    	Resources   []Resource   `xml:"resource"`
+	XMLName   xml.Name   `xml:"resource_counters"`
+	Resources []Resource `xml:"resource"`
 }
 
 type Resource struct {
-	XMLName    xml.Name `xml:"resource"`
-	Id	   string   `xml:"id,attr"`
-	Display    string   `xml:"display_name,attr"`
+	XMLName xml.Name `xml:"resource"`
+	Id      string   `xml:"id,attr"`
+	Display string   `xml:"display_name,attr"`
 	// ResourceCounters, ResourceActive
-	Value      uint64   `xml:"value,attr"`
+	Value uint64 `xml:"value,attr"`
 	// ResourceLicenses only
-	Total	   string   `xml:"total,attr"`
-	Used	   string   `xml:"used,attr"`
-	Free	   string   `xml:"free,attr"`
-	PercUsed   string   `xml:"percent_used,attr"`
-	Allocated  string   `xml:"allocated,attr"`
+	Total     string `xml:"total,attr"`
+	Used      string `xml:"used,attr"`
+	Free      string `xml:"free,attr"`
+	PercUsed  string `xml:"percent_used,attr"`
+	Allocated string `xml:"allocated,attr"`
 }
+
 // ---------------------------- Fetch For XMS REST API
 
 func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
-	logDebug("fetchC5XmsMetrics: start")	
+	logDebug("fetchC5XmsMetrics: start")
 	defer wg.Done()
 	// disable security check for a client
 	// Failed to connect Get "https://127.0.0.1:10443/resource/counters": x509: cannot validate certificate for xms because it doesn't contain any IP SANs
 	tr := &http.Transport{
-        	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-    	}
-    	
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	//client := http.Client{Timeout: 2 * time.Second}
 	client := http.Client{Timeout: 2 * time.Second, Transport: tr}
 
@@ -605,12 +605,12 @@ func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
 	defer resp.Body.Close()
 
 	// activate struct for xml
-	var webService WebService 
+	var webService WebService
 
 	logDebug("Parsing response body", resp.Body)
 
 	// parse and decode xml to structure
-	err = xml.NewDecoder(resp.Body).Decode(&webService) 
+	err = xml.NewDecoder(resp.Body).Decode(&webService)
 
 	if err != nil {
 		logError("Failed to parse response, err: ", err)
@@ -619,7 +619,7 @@ func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
 	}
 
 	// fetch and set metrics
-	if (prefix == "resourcecounters") {
+	if prefix == "resourcecounters" {
 		processXmsResourceCountersMetrics(prefix, webService.Response.ResourceCounters)
 	} else {
 		processXmsResourceLicensesMetrics(prefix, webService.Response.ResourceLicenses)
@@ -640,9 +640,9 @@ func processXmsResourceCountersMetrics(prefix string, counters ResourceCounters)
 
 func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses) {
 
-	for _ , item := range licenses.Resources {
+	for _, item := range licenses.Resources {
 		//logDebug("fetchC5XmsMetrics: ", i, "     Id: ", item.Id) //xml
-		prefixplus := prefix+`_`+item.Id+`_`
+		prefixplus := prefix + `_` + item.Id + `_`
 		total, _ := strconv.ParseUint(item.Total, 0, 64)
 		used, _ := strconv.ParseUint(item.Used, 0, 64)
 		free, _ := strconv.ParseUint(item.Free, 0, 64)
@@ -656,6 +656,7 @@ func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses)
 		setMetricValue(prefixplus+`allocated`, allocated)
 	}
 }
+
 // ---------------------------- Main
 
 func main() {
@@ -731,9 +732,9 @@ func main() {
 			go fetchC5StateMetrics("notification", conf.NotificationURL, &wg)
 		}
 		if conf.CstaEnabled {
-                        wg.Add(1)
-                        go fetchC5StateMetrics("cstagwd", conf.CstaURL, &wg)
-                }
+			wg.Add(1)
+			go fetchC5StateMetrics("cstagwd", conf.CstaURL, &wg)
+		}
 
 		wg.Wait()
 		// We need to ensure sequential processing, so wait between fetches
@@ -771,19 +772,19 @@ func logError(msg ...interface{}) {
 func logJsonDebug() {
 	conf := config.AppConfig
 	if conf.JsonDebugEnabled {
-        logDebug("Using configuration:")
-        logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
-        logDebug("- sipproxyd", conf.SIPProxydEnabled)
-        logDebug("  url:", conf.SIPProxydURL)
-        logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
-        logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
-        logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
-        logDebug("- acdqueued", conf.ACDQueuedEnabled)
-        logDebug("  url:", conf.ACDQueuedURL)
-        logDebug("- registard", conf.RegistrardEnabled)
-        logDebug("  url:", conf.RegistrardURL)
-        logDebug("- notification-server", conf.NotificationEnabled)
-        logDebug("  url:", conf.NotificationURL)
+		logDebug("Using configuration:")
+		logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
+		logDebug("- sipproxyd", conf.SIPProxydEnabled)
+		logDebug("  url:", conf.SIPProxydURL)
+		logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
+		logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
+		logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
+		logDebug("- acdqueued", conf.ACDQueuedEnabled)
+		logDebug("  url:", conf.ACDQueuedURL)
+		logDebug("- registard", conf.RegistrardEnabled)
+		logDebug("  url:", conf.RegistrardURL)
+		logDebug("- notification-server", conf.NotificationEnabled)
+		logDebug("  url:", conf.NotificationURL)
 	}
 }
 
