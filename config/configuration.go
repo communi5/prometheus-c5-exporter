@@ -5,15 +5,14 @@ var AppConfig = &AppConfiguration{}
 
 // AppConfiguration is used to define the TOML config structure
 type AppConfiguration struct {
-	Debug            bool
-	ListenAddress    string `default:":9055"`
-	JsonDebugEnabled bool
-	XmsDebugEnabled  bool
+	Debug         bool
+	ListenAddress string `default:":9055"`
+
 	// XMS Configuration
-	ResourceCountersEnabled bool
-	ResourceCountersURL     string `default:"http://localhost:10080/resource/counters"`
-	ResourceLicensesEnabled bool
-	ResourceLicensesURL     string `default:"http://localhost:10080/resource/licenses"`
+	XmsEnabled     bool
+	XmsCountersURL string `default:"http://localhost:10080/resource/counters"`
+	XmsLicensesURL string `default:"http://localhost:10080/resource/licenses"`
+
 	// C5 Configuration
 	SIPProxydEnabled        bool
 	SIPProxydURL            string `default:"http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"`

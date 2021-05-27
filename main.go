@@ -576,16 +576,15 @@ type Resource struct {
 
 // ---------------------------- Fetch For XMS REST API
 
-func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
-	logDebug("fetchC5XmsMetrics: start")
+func fetchXmsMetrics(prefix, url string, wg *sync.WaitGroup) {
+	logDebug("fetchXmsMetrics with prefix ", prefix, "from url", url)
 	defer wg.Done()
-	// disable security check for a client
-	// Failed to connect Get "https://127.0.0.1:10443/resource/counters": x509: cannot validate certificate for xms because it doesn't contain any IP SANs
+	// Disable of certificate checks required for XMS in case HTTPS is used
+	// Failed to connect Get "https://127.0.0.1:10443/resource/counters":
+	//   x509: cannot validate certificate for XMS because it doesn't contain any IP SANs
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-
-	//client := http.Client{Timeout: 2 * time.Second}
 	client := http.Client{Timeout: 2 * time.Second, Transport: tr}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -619,7 +618,7 @@ func fetchC5XmsMetrics(prefix, url string, wg *sync.WaitGroup) {
 	}
 
 	// fetch and set metrics
-	if prefix == "resourcecounters" {
+	if prefix == "xms_counter" {
 		processXmsResourceCountersMetrics(prefix, webService.Response.ResourceCounters)
 	} else {
 		processXmsResourceLicensesMetrics(prefix, webService.Response.ResourceLicenses)
@@ -641,14 +640,14 @@ func processXmsResourceCountersMetrics(prefix string, counters ResourceCounters)
 func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses) {
 
 	for _, item := range licenses.Resources {
-		//logDebug("fetchC5XmsMetrics: ", i, "     Id: ", item.Id) //xml
+		//logDebug("fetchXmsMetrics: ", i, "     Id: ", item.Id) //xml
 		prefixplus := prefix + `_` + item.Id + `_`
 		total, _ := strconv.ParseUint(item.Total, 0, 64)
 		used, _ := strconv.ParseUint(item.Used, 0, 64)
 		free, _ := strconv.ParseUint(item.Free, 0, 64)
 		percUsed, _ := strconv.ParseUint(item.PercUsed, 0, 64)
 		allocated, _ := strconv.ParseUint(item.Allocated, 0, 64)
-		//logDebug("fetchC5XmsMetrics: ", prefixplus+`total`,":", total) //xml
+		//logDebug("fetchXmsMetrics: ", prefixplus+`total`,":", total) //xml
 		setMetricValue(prefixplus+`total`, total)
 		setMetricValue(prefixplus+`used`, used)
 		setMetricValue(prefixplus+`free`, free)
@@ -684,8 +683,7 @@ func main() {
 		flag.Parse()
 	} else {
 		logInfo("No configuration file used. Enabling querying of all C5 and XMS processes.")
-		conf.ResourceCountersEnabled = true
-		conf.ResourceLicensesEnabled = true
+		conf.XmsEnabled = true
 		conf.SIPProxydEnabled = true
 		conf.ACDQueuedEnabled = true
 		conf.RegistrardEnabled = true
@@ -693,12 +691,11 @@ func main() {
 		conf.CstaEnabled = true
 	}
 
-	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.CstaEnabled || conf.ResourceCountersEnabled || conf.ResourceLicensesEnabled) {
+	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.CstaEnabled || conf.XmsEnabled) {
 		logError("No c5 or XMS processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
-	logJsonDebug()
-	logXmsDebug()
+	logConfig()
 
 	metricSet = metrics.NewSet()
 
@@ -706,13 +703,10 @@ func main() {
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		var wg sync.WaitGroup
 		// --- XMS5 Metrics
-		if conf.ResourceCountersEnabled {
-			wg.Add(1)
-			go fetchC5XmsMetrics("resourcecounters", conf.ResourceCountersURL, &wg)
-		}
-		if conf.ResourceLicensesEnabled {
-			wg.Add(1)
-			go fetchC5XmsMetrics("resourcelicenses", conf.ResourceLicensesURL, &wg)
+		if conf.XmsEnabled {
+			wg.Add(2)
+			go fetchXmsMetrics("xms_counter", conf.XmsCountersURL, &wg)
+			go fetchXmsMetrics("xms_license", conf.XmsLicensesURL, &wg)
 		}
 		// --- C5 Metrics
 		if conf.SIPProxydEnabled {
@@ -769,33 +763,37 @@ func logError(msg ...interface{}) {
 	log.Print("[ERROR] ", fmt.Sprintln(msg...))
 }
 
-func logJsonDebug() {
+func logConfig() {
 	conf := config.AppConfig
-	if conf.JsonDebugEnabled {
-		logDebug("Using configuration:")
-		logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
-		logDebug("- sipproxyd", conf.SIPProxydEnabled)
-		logDebug("  url:", conf.SIPProxydURL)
-		logDebug("- sipproxyd-trunk", conf.SIPProxydTrunksEnabled)
-		logDebug("  url stats:", conf.SIPProxydTrunkStatsURL)
-		logDebug("  url limit:", conf.SIPProxydTrunkLimitsURL)
-		logDebug("- acdqueued", conf.ACDQueuedEnabled)
-		logDebug("  url:", conf.ACDQueuedURL)
-		logDebug("- registard", conf.RegistrardEnabled)
-		logDebug("  url:", conf.RegistrardURL)
-		logDebug("- notification-server", conf.NotificationEnabled)
-		logDebug("  url:", conf.NotificationURL)
-	}
-}
-
-func logXmsDebug() {
-	conf := config.AppConfig
-	if conf.XmsDebugEnabled {
-		logDebug("Using configuration:")
-		logDebug("- debug", conf.Debug, "listenAddress", conf.ListenAddress)
-		logDebug("- resourcecounters", conf.ResourceCountersEnabled)
-		logDebug("  url:", conf.ResourceCountersURL)
-		logDebug("- resourcelicenses", conf.ResourceLicensesEnabled)
-		logDebug("  url:", conf.ResourceLicensesURL)
+	if conf.Debug {
+		logDebug("Using configuration")
+		logDebug("  debug =", conf.Debug)
+		logDebug("  listenAddress =", conf.ListenAddress)
+		logDebug("  sipproxyd enabled =", conf.SIPProxydEnabled)
+		if conf.SIPProxydEnabled {
+			logDebug("  url:", conf.SIPProxydURL)
+		}
+		logDebug("  sipproxyd-trunk enabled:", conf.SIPProxydTrunksEnabled)
+		if conf.SIPProxydTrunksEnabled {
+			logDebug("    url stats:", conf.SIPProxydTrunkStatsURL)
+			logDebug("    url limit:", conf.SIPProxydTrunkLimitsURL)
+		}
+		logDebug("  acdqueued enabled:", conf.ACDQueuedEnabled)
+		if conf.ACDQueuedEnabled {
+			logDebug("    url:", conf.ACDQueuedURL)
+		}
+		logDebug("  registard enabled:", conf.RegistrardEnabled)
+		if conf.RegistrardEnabled {
+			logDebug("    url:", conf.RegistrardURL)
+		}
+		logDebug("  notification-server enabled:", conf.NotificationEnabled)
+		if conf.NotificationEnabled {
+			logDebug("    url:", conf.NotificationURL)
+		}
+		logDebug("  xms enabled:", conf.XmsEnabled)
+		if conf.XmsEnabled {
+			logDebug("    url counter:", conf.XmsCountersURL)
+			logDebug("    url license:", conf.XmsLicensesURL)
+		}
 	}
 }
