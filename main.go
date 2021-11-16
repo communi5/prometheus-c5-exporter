@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.1.1"
+const version = "1.1.2"
 
 // Global metric set
 var metricSet *metrics.Set
@@ -52,6 +52,7 @@ type c5StateResponse struct {
 	BuildVersionOld         string        `json:"buildVersion:"` // Workaround for typo in "buildVersion:" (trailing colon) before R6.2
 	StartupTime             string        // "startupTime" : "2020-01-19 04:01:04.503",
 	StartupTimeOld          string        `json:"startupTime:"` // Workaround for typo in "startupTime:" (trailing colon) before R6.2
+	ClusterInfo             string        // "clusterInfo" : "DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)",
 	MemoryUsage             string        // "memoryUsage" : "C5 Heap Health: OK  - Mem used: 2%  - Mem used: 57MB  - Mem total: 2048MB  - Max: 3% - UpdCtr: 13198",
 	TuQueueStatus           string        // "tuQueueStatus" : "OK - checked: 1830",
 	CounterInfos            []interface{} // "counterInfos": [ ... ]
@@ -60,6 +61,7 @@ type c5StateResponse struct {
 
 type c5CounterResponse struct {
 	ProxyResponseTimeStampAndState string        // "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+	ClusterInfo                    string        // "clusterInfo" : "DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)",
 	CounterName                    string        // "counterName" : "BT_CALLS_LIMIT_REACHED",
 	CounterType                    string        // "counterType" : "EVENT",
 	AbsoluteValue                  uint64        // "absoluteValue" : 0, // event only
@@ -74,13 +76,24 @@ type c5CounterResponse struct {
 	TableValues                    []interface{} // "counterInfos": [ ... ]
 }
 
-func buildMetricName(prefix string, name string, idx *int) string {
+type MetricAttribute struct {
+	name  string
+	value string
+}
+
+func buildMetricName(prefix string, name string, attrs []MetricAttribute) string {
 	if prefix != "" {
 		name = prefix + "_" + name
 	}
 	name = strings.ToLower(name)
-	if idx != nil {
-		return fmt.Sprintf(`%s{idx="%d"}`, name, *idx)
+	if len(attrs) > 0 {
+		labels := string("{")
+		for _, v := range attrs {
+			labels += v.name + string(`="`) + v.value + `",`
+		}
+		labels = strings.TrimRight(labels, ",")
+		labels = labels + string("}")
+		name = name + labels
 	}
 	return name
 }
@@ -91,39 +104,53 @@ func normalizeMetricName(name string) string {
 	return strings.Trim(name, "_. ")
 }
 
-func setUsageMetric(prefix string, metric usageCounter) {
+func appendIndex(idx *int, attrs *[]MetricAttribute) {
+	if idx != nil {
+		*attrs = append(*attrs, MetricAttribute{"idx", fmt.Sprintf(`%d`, *idx)})
+	}
+}
+
+func setUsageMetric(prefix string, metric usageCounter, attrs []MetricAttribute) {
 	// logDebug("set usage metric for ", prefix, metric.Name)
-	current := buildMetricName(prefix, metric.Name+"_current", metric.Idx)
+	appendIndex(metric.Idx, &attrs)
+	current := buildMetricName(prefix, metric.Name+"_current", attrs)
 	setMetricValue(current, metric.Current)
-	lastMin := buildMetricName(prefix, metric.Name+"_lastmin", metric.Idx)
+	lastMin := buildMetricName(prefix, metric.Name+"_lastmin", attrs)
 	setMetricValue(lastMin, metric.LastMin)
-	lastAvg := buildMetricName(prefix, metric.Name+"_lastavg", metric.Idx)
+	lastAvg := buildMetricName(prefix, metric.Name+"_lastavg", attrs)
 	setMetricValue(lastAvg, metric.LastAvg)
-	lastMax := buildMetricName(prefix, metric.Name+"_lastmax", metric.Idx)
+	lastMax := buildMetricName(prefix, metric.Name+"_lastmax", attrs)
 	setMetricValue(lastMax, metric.LastMax)
 }
 
-func setLabeledUsageMetric(prefix string, label string, metric usageCounter) {
-	// logDebug("set labeled usage metric for ", prefix, metric.Name)
-	current := buildMetricName(prefix, `current{`+label+`="`+metric.Name+`"}`, metric.Idx)
+func setLabeledUsageMetric(prefix string, label string, metric usageCounter, attrs []MetricAttribute) {
+	//logDebug("set labeled usage metric for ", prefix, metric.Name)
+	attrs = append(attrs, MetricAttribute{label, metric.Name})
+	appendIndex(metric.Idx, &attrs)
+
+	current := buildMetricName(prefix, `current`, attrs)
 	setMetricValue(current, metric.Current)
-	lastMin := buildMetricName(prefix, `lastmin{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	lastMin := buildMetricName(prefix, `lastmin`, attrs)
 	setMetricValue(lastMin, metric.LastMin)
-	lastAvg := buildMetricName(prefix, `lastavg{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	lastAvg := buildMetricName(prefix, `lastavg`, attrs)
 	setMetricValue(lastAvg, metric.LastAvg)
-	lastMax := buildMetricName(prefix, `lastmax{`+label+`="`+metric.Name+`"}`, metric.Idx)
+	lastMax := buildMetricName(prefix, `lastmax`, attrs)
 	setMetricValue(lastMax, metric.LastMax)
 }
 
-func setCounterMetric(prefix string, metric eventCounter) {
-	// logDebug("set counter metric for ", prefix, metric.Name)
-	current := buildMetricName(prefix, metric.Name+"_total", metric.Idx)
+func setCounterMetric(prefix string, metric eventCounter, attrs []MetricAttribute) {
+	//logDebug("set counter metric for ", prefix, metric.Name, "attrs:", attrs)
+	appendIndex(metric.Idx, &attrs)
+	current := buildMetricName(prefix, metric.Name+"_total", attrs)
 	setMetricValue(current, metric.Total)
 }
 
-func setLabeledCounterMetric(prefix string, label string, metric eventCounter) {
-	// logDebug("set labeled counter metric for ", prefix, metric.Name)
-	current := buildMetricName(prefix, `total{`+label+`="`+metric.Name+`"}`, metric.Idx)
+func setLabeledCounterMetric(prefix string, label string, metric eventCounter, attrs []MetricAttribute) {
+	//logDebug("set labeled counter metric for ", prefix, attrs)
+	attrs = append(attrs, MetricAttribute{label, metric.Name})
+	appendIndex(metric.Idx, &attrs)
+
+	current := buildMetricName(prefix, `total`, attrs)
 	setMetricValue(current, metric.Total)
 }
 
@@ -149,6 +176,21 @@ func parseBuildString(build string) (version string) {
 	// "Version: 6.0.2.57, compiled on Jan 15 2020, 13:06:31 built by TELES Communication Systems GmbH",
 	parts := strings.Split(build, ",")
 	version = strings.TrimPrefix(parts[0], "Version: ")
+	return
+}
+
+func parseClusterInfo(clusterInfo string) (dc string, cmpGrp string) {
+	// DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)
+	reDC := regexp.MustCompile(`{([^{}]+)}`)
+	reCmpGrp := regexp.MustCompile(`\[([^\[\]]+)\]`)
+	res := reDC.FindStringSubmatch(clusterInfo)
+	if len(res) > 1 {
+		dc = res[1]
+	}
+	res = reCmpGrp.FindStringSubmatch(clusterInfo)
+	if len(res) > 1 {
+		cmpGrp = res[1]
+	}
 	return
 }
 
@@ -345,7 +387,7 @@ func parseSubEventCounter(lines []string) (cnts []eventCounter) {
 	}
 	return
 }
-func processC5StateCounter(prefix string, lines []interface{}) {
+func processC5StateCounter(prefix string, lines []interface{}, attrs []MetricAttribute) {
 	const event, usage string = "event", "usage"
 	var cntType string
 	for _, line := range lines {
@@ -359,7 +401,7 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 			if cntType == usage {
 				cnts := parseSubUsageCounter(sublines)
 				for _, c := range cnts {
-					setUsageMetric(prefix, c)
+					setUsageMetric(prefix, c, attrs)
 				}
 			} else if cntType == event {
 				// Workaround for CSTAGW
@@ -370,7 +412,7 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 				}
 				cnts := parseSubEventCounter(sublines)
 				for _, c := range cnts {
-					setCounterMetric(prefix, c)
+					setCounterMetric(prefix, c, attrs)
 				}
 			} else {
 				logDebug(prefix, "ignoring line for unknown type", sublines)
@@ -392,10 +434,10 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 			}
 			if cntType == usage {
 				c := parseUsageCounter(l)
-				setUsageMetric(prefix, c)
+				setUsageMetric(prefix, c, attrs)
 			} else if cntType == event {
 				c := parseEventCounter(l)
-				setCounterMetric(prefix, c)
+				setCounterMetric(prefix, c, attrs)
 			} else {
 				logDebug(prefix, "ignoring line", l)
 			}
@@ -410,6 +452,7 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 //
 // {
 //   "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+//   "clusterInfo" : "DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)",
 //   "counterName" : "BT_CALLS_LIMIT_REACHED",
 //   "counterType" : "EVENT",
 //   "absoluteValue" : 0,
@@ -422,20 +465,21 @@ func processC5StateCounter(prefix string, lines []interface{}) {
 //   ],
 //   "tableCountInfo" : "curComponentCount2: 14 (10000) "
 // }
-func processC5CounterMetrics(basePrefix string, data c5CounterResponse) {
+func processC5CounterMetrics(basePrefix string, data c5CounterResponse, attrs []MetricAttribute) {
 	const event, usage string = "EVENT", "USAGE"
 	prefix := basePrefix + "_" + strings.ToLower(data.CounterName)
-	setMetricValue(prefix+`_current`, data.CurrentValue)
+
+	setMetricValue(buildMetricName(prefix, `current`, attrs), data.CurrentValue)
 	logDebug("Processing", prefix, "type", data.CounterType)
 	if data.CounterType == event {
-		setMetricValue(prefix+`_total`, data.AbsoluteValue)
-		setMetricValue(prefix+`_last`, data.LastValue)
+		setMetricValue(buildMetricName(prefix, `total`, attrs), data.AbsoluteValue)
+		setMetricValue(buildMetricName(prefix, `last`, attrs), data.LastValue)
 	} else {
 		// setMetricValue(prefix+`_current_min`, data.MinValue)
 		// setMetricValue(prefix+`_current_max`, data.MaxValue)
-		setMetricValue(prefix+`_lastavg`, data.LastAvgValue)
-		setMetricValue(prefix+`_lastmin`, data.LastMinValue)
-		setMetricValue(prefix+`_lastmax`, data.LastMaxValue)
+		setMetricValue(buildMetricName(prefix, `lastavg`, attrs), data.LastAvgValue)
+		setMetricValue(buildMetricName(prefix, `lastmin`, attrs), data.LastMinValue)
+		setMetricValue(buildMetricName(prefix, `lastmax`, attrs), data.LastMaxValue)
 	}
 	// Parse values now
 	for _, line := range data.TableValues {
@@ -448,10 +492,10 @@ func processC5CounterMetrics(basePrefix string, data c5CounterResponse) {
 			}
 			if data.CounterType == usage {
 				c := parseUsageCounter("0 " + l)
-				setLabeledUsageMetric(prefix+"_trunk", "name", c)
+				setLabeledUsageMetric(prefix+"_trunk", "name", c, attrs)
 			} else if data.CounterType == event {
 				c := parseEventCounter("0 " + l)
-				setLabeledCounterMetric(prefix+"_trunk", "name", c)
+				setLabeledCounterMetric(prefix+"_trunk", "name", c, attrs)
 			} else {
 				logDebug(prefix, "ignoring line", l)
 			}
@@ -470,7 +514,7 @@ func clearMetrics(prefix string) {
 	}
 }
 
-func processBaseMetrics(prefix string, state c5StateResponse) {
+func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttribute) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
 	if version == "" { // Workaround for typo in sessionconsole before R6.2
@@ -480,18 +524,20 @@ func processBaseMetrics(prefix string, state c5StateResponse) {
 	if startupTime == "" { // Workaround for typo in sessionconsole before R6.2
 		startupTime = state.StartupTimeOld
 	}
-	logInfo("Processed", prefix, version, "started", startupTime)
-	setMetricValue(prefix+`_info{version="`+version+`",starttime="`+startupTime+`"}`, 1)
+	tmp := append(attrs, MetricAttribute{"version", version})
+	tmp = append(tmp, MetricAttribute{"starttime", startupTime})
+	logInfo("Processed", prefix, tmp)
+	setMetricValue(buildMetricName(prefix, `info`, tmp), 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
-	setMetricValue(prefix+`_state`, parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState, state.NotificationServerState, state.CstaState))
-	setMetricValue(prefix+`_tu_queue_state`, parseQueueStateString(state.TuQueueStatus))
+	setMetricValue(buildMetricName(prefix, `state`, attrs), parseProcessStateString(state.ProxyState, state.QueueState, state.RegistrarState, state.NotificationServerState, state.CstaState))
+	setMetricValue(buildMetricName(prefix, `tu_queue_state`, attrs), parseQueueStateString(state.TuQueueStatus))
 
 	// Set process state (usually active=1 or inactive=0)
 	memUsed, memTotal, memMaxUsage := parseMemoryString(state.MemoryUsage)
-	setMetricValue(prefix+`_memory_used_bytes`, memUsed)
-	setMetricValue(prefix+`_memory_total_bytes`, memTotal)
-	setMetricValue(prefix+`_memory_max_used_percent`, memMaxUsage)
+	setMetricValue(buildMetricName(prefix, `memory_used_bytes`, attrs), memUsed)
+	setMetricValue(buildMetricName(prefix, `memory_total_bytes`, attrs), memTotal)
+	setMetricValue(buildMetricName(prefix, `memory_max_used_percent`, attrs), memMaxUsage)
 }
 
 func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
@@ -512,11 +558,15 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 		clearMetrics(prefix)
 		return
 	}
+
+	dc, cmpGrp := parseClusterInfo(c5state.ClusterInfo)
+	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
+
 	// process base information
-	processBaseMetrics(prefix, c5state)
+	processBaseMetrics(prefix, c5state, attrs)
 
 	// process event and usage counters now
-	processC5StateCounter(prefix, c5state.CounterInfos)
+	processC5StateCounter(prefix, c5state.CounterInfos, attrs)
 }
 
 func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
@@ -538,8 +588,11 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 		return
 	}
 
+	dc, cmpGrp := parseClusterInfo(c5Resp.ClusterInfo)
+	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
+
 	// process event and usage counters now
-	processC5CounterMetrics(prefix, c5Resp)
+	processC5CounterMetrics(prefix, c5Resp, attrs)
 }
 
 // ---------------------------- XML struct For XMS REST API
