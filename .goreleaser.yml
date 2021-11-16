@@ -59,19 +59,31 @@ nfpms:
 
     bindir: /usr/bin
 
-    files:
-      "resources/prometheus-c5-exporter.service": "/usr/lib/systemd/system/prometheus-c5-exporter.service"
-      "resources/prometheus-c5-exporter.initd": "/etc/init.d/prometheus-c5-exporter"
-      "README.md": "/usr/share/doc/prometheus-c5-exporter/README.md"
-      "resources/rsyslog.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
-      "resources/logrotate.d/prometheus-c5-exporter.conf": "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
-      "resources/grafana/dashboard-c5-proxy-details.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-proxy-details.json"
-      "resources/grafana/dashboard-c5-acd-details.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-acd-details.json"
-      "resources/grafana/dashboard-c5-registrar-details.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-registrar-details.json"
-      "resources/grafana/dashboard-c5-bt-details.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-details.json"
-      "resources/grafana/dashboard-c5-bt-overview.json": "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-overview.json"
-      "prometheus-c5-exporter.conf.example": "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
+    contents:
+    - src: "resources/prometheus-c5-exporter.service" 
+      dst: "/usr/lib/systemd/system/prometheus-c5-exporter.service"
+    - src: "resources/prometheus-c5-exporter.initd" 
+      dst: "/etc/init.d/prometheus-c5-exporter"
+    - src: "README.md" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/README.md"
+    - src: "resources/rsyslog.d/prometheus-c5-exporter.conf" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
+    - src: "resources/logrotate.d/prometheus-c5-exporter.conf" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
+    - src: "resources/grafana/dashboard-c5-proxy-details.json" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-proxy-details.json"
+    - src: "resources/grafana/dashboard-c5-acd-details.json" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-acd-details.json"
+    - src: "resources/grafana/dashboard-c5-registrar-details.json" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-registrar-details.json"
+    - src: "resources/grafana/dashboard-c5-bt-details.json" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-details.json"
+    - src: "resources/grafana/dashboard-c5-bt-overview.json" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-overview.json"
+    - src: "prometheus-c5-exporter.conf.example" 
+      dst: "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
     # Config files to add to your package. They are about the same as
     # the files keyword, except package managers treat them differently
-    config_files:
-      "prometheus-c5-exporter.conf.example": "/etc/prometheus-c5-exporter.conf"
+    - src: "prometheus-c5-exporter.conf.example" 
+      dst: "/etc/prometheus-c5-exporter.conf"
+      type: config
