@@ -1,5 +1,15 @@
 # Release notes for prometheus-c5-exporter
 
+## v1.1.2 (2021-11-16)
+
+Fixes:
+
+- Prevent multiple _info metrics (#3)
+
+Features:
+
+- Add datacenter & componentGroup labels
+
 ## v1.1.1 (2021-05-27)
 
 Fixes:
