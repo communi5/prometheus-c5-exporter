@@ -387,6 +387,7 @@ func parseSubEventCounter(lines []string) (cnts []eventCounter) {
 	}
 	return
 }
+
 func processC5StateCounter(prefix string, lines []interface{}, attrs []MetricAttribute) {
 	const event, usage string = "event", "usage"
 	var cntType string
@@ -527,6 +528,7 @@ func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttr
 	tmp := append(attrs, MetricAttribute{"version", version})
 	tmp = append(tmp, MetricAttribute{"starttime", startupTime})
 	logInfo("Processed", prefix, tmp)
+	clearMetrics(prefix + "_info")
 	setMetricValue(buildMetricName(prefix, `info`, tmp), 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
