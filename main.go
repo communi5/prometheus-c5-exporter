@@ -23,6 +23,7 @@ import (
 const version = "1.1.2"
 
 // Global metric set
+var metricsMtx sync.Mutex
 var metricSet *metrics.Set
 
 type eventCounter struct {
@@ -156,6 +157,8 @@ func setLabeledCounterMetric(prefix string, label string, metric eventCounter, a
 
 func setMetricValue(name string, value uint64) {
 	// logDebug("set metric ", name, "value", value)
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
 	metricSet.GetOrCreateCounter(name).Set(value)
 }
 
@@ -506,6 +509,8 @@ func processC5CounterMetrics(basePrefix string, data c5CounterResponse, attrs []
 }
 
 func clearMetrics(prefix string) {
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
 	logDebug("Clear metric counters for", prefix)
 	for _, name := range metricSet.ListMetricNames() {
 		if strings.HasPrefix(name, prefix) {
