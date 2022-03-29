@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.1.2"
+const version = "1.1.4"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -508,18 +508,6 @@ func processC5CounterMetrics(basePrefix string, data c5CounterResponse, attrs []
 	return
 }
 
-func clearMetrics(prefix string) {
-	metricsMtx.Lock()
-	defer metricsMtx.Unlock()
-	logDebug("Clear metric counters for", prefix)
-	for _, name := range metricSet.ListMetricNames() {
-		if strings.HasPrefix(name, prefix) {
-			logDebug("Unregister metric counter", name)
-			metricSet.UnregisterMetric(name)
-		}
-	}
-}
-
 func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttribute) {
 	// Set build version in info string
 	version := parseBuildString(state.BuildVersion)
@@ -533,7 +521,6 @@ func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttr
 	tmp := append(attrs, MetricAttribute{"version", version})
 	tmp = append(tmp, MetricAttribute{"starttime", startupTime})
 	logInfo("Processed", prefix, tmp)
-	clearMetrics(prefix + "_info")
 	setMetricValue(buildMetricName(prefix, `info`, tmp), 1)
 
 	// Set process/queue states (usually active=1 or inactive=0)
@@ -553,7 +540,6 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		clearMetrics(prefix)
 		return
 	}
 	defer resp.Body.Close()
@@ -562,7 +548,6 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
 	if err != nil {
 		logError("Failed to parse response, err: ", err)
-		clearMetrics(prefix)
 		return
 	}
 
@@ -582,7 +567,6 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		clearMetrics(prefix)
 		return
 	}
 	defer resp.Body.Close()
@@ -591,7 +575,6 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	err = json.NewDecoder(resp.Body).Decode(&c5Resp)
 	if err != nil {
 		logError("Failed to parse response, err: ", err)
-		clearMetrics(prefix)
 		return
 	}
 
@@ -664,7 +647,6 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 	resp, err := client.Do(req)
 	if err != nil {
 		logError("Failed to connect", err)
-		clearMetrics(prefix)
 		return
 	}
 	defer resp.Body.Close()
@@ -677,7 +659,6 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 
 	if err != nil {
 		logError("Failed to parse response for prefix", prefix, " with error:", err)
-		clearMetrics(prefix)
 		return
 	}
 
@@ -763,10 +744,11 @@ func main() {
 	}
 	logConfig()
 
-	metricSet = metrics.NewSet()
-
 	// Expose the registered metrics at `/metrics` path.
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/metrics", func(httpResponse http.ResponseWriter, req *http.Request) {
+
+		metricSet = metrics.NewSet()
+
 		var wg sync.WaitGroup
 		// --- XMS5 Metrics
 		if conf.XmsEnabled {
@@ -806,8 +788,8 @@ func main() {
 			go fetchC5CounterMetrics("sipproxyd", conf.SIPProxydTrunkLimitsURL, &wg)
 			wg.Wait()
 		}
-		metricSet.WritePrometheus(w)
-		metrics.WriteProcessMetrics(w)
+		metricSet.WritePrometheus(httpResponse)
+		metrics.WriteProcessMetrics(httpResponse)
 	})
 
 	// logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, conf.ListenAddress))

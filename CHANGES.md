@@ -1,10 +1,20 @@
 # Release notes for prometheus-c5-exporter
 
+## v1.1.4 (2022-03-29)
+Fixes:
+
+- Fixed outdated metrics being reported
+
+## v1.1.3 (2021-12-01)
+Fixes:
+
+- Fixed deadlock
+
 ## v1.1.2 (2021-11-16)
 
 Fixes:
 
-- Prevent multiple _info metrics (#3)
+- Prevent multiple _info_ metrics (#3)
 
 Features:
 
