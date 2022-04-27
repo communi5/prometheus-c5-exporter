@@ -540,9 +540,12 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
+		setMetricValue(prefix+"_up", 0)
 		return
 	}
 	defer resp.Body.Close()
+	setMetricValue(prefix+"_up", 1)
+
 	var c5state c5StateResponse
 	// logDebug("Parsing response body", resp.Body)
 	err = json.NewDecoder(resp.Body).Decode(&c5state)
@@ -567,9 +570,12 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
+		setMetricValue(prefix+"_up", 0)
 		return
 	}
 	defer resp.Body.Close()
+	setMetricValue(prefix+"_up", 1)
+
 	var c5Resp c5CounterResponse
 	// logDebug("Parsing response body", resp.Body)
 	err = json.NewDecoder(resp.Body).Decode(&c5Resp)
@@ -647,6 +653,7 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 	resp, err := client.Do(req)
 	if err != nil {
 		logError("Failed to connect", err)
+		setMetricValue("xms_up", 0)
 		return
 	}
 	defer resp.Body.Close()
@@ -659,9 +666,11 @@ func fetchXmsMetrics(prefix, url string, user string, pwd string, wg *sync.WaitG
 
 	if err != nil {
 		logError("Failed to parse response for prefix", prefix, " with error:", err)
+		setMetricValue("xms_up", 0)
 		return
 	}
 
+	setMetricValue("xms_up", 1)
 	logDebug(fmt.Sprintf("Parsing XMS response body for prefix %s succeeded: %+v", prefix, webService))
 
 	// fetch and set metrics
