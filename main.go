@@ -41,6 +41,8 @@ type usageCounter struct {
 	LastMin uint64
 	LastAvg uint64
 	LastMax uint64
+	Min     uint64
+	Max     uint64
 }
 
 type c5StateResponse struct {
@@ -122,6 +124,10 @@ func setUsageMetric(prefix string, metric usageCounter, attrs []MetricAttribute)
 	setMetricValue(lastAvg, metric.LastAvg)
 	lastMax := buildMetricName(prefix, metric.Name+"_lastmax", attrs)
 	setMetricValue(lastMax, metric.LastMax)
+	min := buildMetricName(prefix, metric.Name+"_min", attrs)
+	setMetricValue(min, metric.Min)
+	max := buildMetricName(prefix, metric.Name+"_max", attrs)
+	setMetricValue(max, metric.Max)
 }
 
 func setLabeledUsageMetric(prefix string, label string, metric usageCounter, attrs []MetricAttribute) {
@@ -137,6 +143,10 @@ func setLabeledUsageMetric(prefix string, label string, metric usageCounter, att
 	setMetricValue(lastAvg, metric.LastAvg)
 	lastMax := buildMetricName(prefix, `lastmax`, attrs)
 	setMetricValue(lastMax, metric.LastMax)
+	min := buildMetricName(prefix, `min`, attrs)
+	setMetricValue(min, metric.Min)
+	max := buildMetricName(prefix, `_max`, attrs)
+	setMetricValue(max, metric.Max)
 }
 
 func setCounterMetric(prefix string, metric eventCounter, attrs []MetricAttribute) {
@@ -292,6 +302,8 @@ func parseUsageCounter(line string) usageCounter {
 		ID:      parts[0],
 		Name:    normalizeMetricName(parts[1]),
 		Current: parseUint64(parts[2]),
+		Min:     parseUint64(parts[3]),
+		Max:     parseUint64(parts[4]),
 		LastMin: parseUint64(parts[5]),
 		LastMax: parseUint64(parts[6]),
 		LastAvg: parseUint64(parts[7]),
@@ -330,6 +342,8 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 					Name:    normalizeMetricName(name),
 					Idx:     &idx,
 					Current: parseUint64(parts[0]),
+					Min:     parseUint64(parts[1]),
+					Max:     parseUint64(parts[2]),
 					LastMin: parseUint64(parts[3]),
 					LastMax: parseUint64(parts[4]),
 					LastAvg: parseUint64(parts[5]),
