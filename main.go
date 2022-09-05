@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.1.5"
+const version = "1.1.6"
 
 // Global metric set
 var metricsMtx sync.Mutex
