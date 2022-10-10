@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.1.6"
+const version = "1.1.7"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -170,6 +170,12 @@ func setMetricValue(name string, value uint64) {
 	metricsMtx.Lock()
 	defer metricsMtx.Unlock()
 	metricSet.GetOrCreateCounter(name).Set(value)
+}
+
+func setMetricValueFloat(name string, value float64) {
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
+	metricSet.GetOrCreateFloatCounter(name).Set(value)
 }
 
 func parseInt64(str string) int64 {
@@ -715,13 +721,13 @@ func processXmsResourceLicensesMetrics(prefix string, licenses ResourceLicenses)
 		total, _ := strconv.ParseUint(item.Total, 0, 64)
 		used, _ := strconv.ParseUint(item.Used, 0, 64)
 		free, _ := strconv.ParseUint(item.Free, 0, 64)
-		percUsed, _ := strconv.ParseUint(item.PercUsed, 0, 64)
+		percUsed, _ := strconv.ParseFloat(item.PercUsed, 64)
 		allocated, _ := strconv.ParseUint(item.Allocated, 0, 64)
 		//logDebug("fetchXmsMetrics: ", prefixplus+`total`,":", total) //xml
 		setMetricValue(prefixplus+`total`, total)
 		setMetricValue(prefixplus+`used`, used)
 		setMetricValue(prefixplus+`free`, free)
-		setMetricValue(prefixplus+`percent_used`, percUsed)
+		setMetricValueFloat(prefixplus+`percent_used`, percUsed)
 		setMetricValue(prefixplus+`allocated`, allocated)
 	}
 }
