@@ -1,5 +1,20 @@
 # Release notes for prometheus-c5-exporter
 
+## v1.1.7 (2022-10-10)
+Fixes:
+
+- Fixed XMS percent_used counter
+
+## v1.1.6 (2022-09-05)
+Fixes:
+
+- Added min and max metrics for usage counters
+
+## v1.1.5 (2022-04-27)
+Fixes:
+
+- Added 'up' metrics for all targets
+
 ## v1.1.4 (2022-03-29)
 Fixes:
 
