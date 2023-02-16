@@ -58,10 +58,27 @@ cstaEnabled = false
 notificationEnabled = false
 
 ### 3rd party XMS
-resourceCountersEnabled = false
-resourceLicensesEnabled = false
-
+xmsEnabled = false
 ```
+
+### Installation on CentOS/RedHat
+
+Install RPM package:
+
+    rpm -Uvh prometheus-c5-exporter_1.1.7_linux_amd64.rpm
+
+Adjust configuration to in `/etc/prometheus-c5-exporter.conf` to only enable XMS metrics:
+
+Restart and check status:
+
+    systemctl daemon-reload
+    systemctl restart prometheus-c5-exporter.service
+    systemctl status prometheus-c5-exporter.service
+
+Ensure we allow external access to exporter port 9055:
+
+    iptables -A INPUT -i eth0 -p tcp --dport 9055 -j ACCEPT
+    vi /etc/sysconfig/iptables # or iptables-save
 
 ## Building and Packaging
 
