@@ -17,10 +17,13 @@ type AppConfiguration struct {
 
 	// C5 Configuration
 	SIPProxydEnabled        bool
+	SIPProxydExtEnabled     bool
 	SIPProxydURL            string `default:"http://127.0.0.1:9980/c5/proxy/commands?49&1&-v"`
 	SIPProxydTrunksEnabled  bool
 	SIPProxydTrunkStatsURL  string `default:"http://127.0.0.1:9980/c5/proxy/commands?3&7&309"`
 	SIPProxydTrunkLimitsURL string `default:"http://127.0.0.1:9980/c5/proxy/commands?3&7&368"`
+	SIPProxydSPCountersURL  string `default:"http://127.0.0.1:9980/c5/proxy/commands?4&0&spAll"`
+	SIPProxydClSPCountersURL string `default:"http://127.0.0.1:9980/c5/proxy/commands?4&0&spAllCl"`
 	ACDQueuedEnabled        bool
 	ACDQueuedURL            string `default:"http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"`
 	RegistrardEnabled       bool
@@ -29,4 +32,7 @@ type AppConfiguration struct {
 	NotificationURL         string `default:"http://127.0.0.1:9988/c5/proxy/commands?49&1&-v"`
 	CstaEnabled             bool
 	CstaURL                 string `default:"http://127.0.0.1:9986/c5/proxy/commands?49&1&-v"`
+
+	// Misc
+	GoCollectorEnabled      bool
 }

@@ -9,6 +9,10 @@ sipproxydTrunksEnabled = true
 # sipproxydTrunkStatsURL = "http://127.0.0.1:9980/c5/proxy/commands?3&7&309"
 # sipproxydTrunkLimitsURL = "http://127.0.0.1:9980/c5/proxy/commands?3&7&368"
 
+sipproxydExtEnabled = true
+# sipproxydSPCountersURL = "http://127.0.0.1:9980/c5/proxy/commands?4&0&spAll"`
+# sipproxydClSPCountersURL ="http://127.0.0.1:9980/c5/proxy/commands?4&0&spAllCl"`
+
 ### Query acdqueued process
 acdqueuedEnabled = true
 # acdqueuedURL = "http://127.0.0.1:9982/c5/proxy/commands?49&1&-v"
@@ -31,3 +35,6 @@ xmsEnabled = false
 #xmsPwd = "admin"
 #xmsCountersURL = "http://localhost:10080/resource/counters"
 #xmsLicensesURL = "http://localhost:10080/resource/licenses"
+
+### Enable monitoring of the exporter itself (go_memstats_...)
+goCollectorEnabled = false

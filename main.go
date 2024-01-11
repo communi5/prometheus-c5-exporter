@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.1.7"
+const version = "1.2.0"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -43,6 +43,7 @@ type usageCounter struct {
 	LastMax uint64
 	Min     uint64
 	Max     uint64
+	Total   uint64
 }
 
 type c5StateResponse struct {
@@ -818,8 +819,27 @@ func main() {
 			wg.Wait()
 		}
 		metricSet.WritePrometheus(httpResponse)
-		metrics.WriteProcessMetrics(httpResponse)
+		if conf.GoCollectorEnabled {
+			metrics.WriteProcessMetrics(httpResponse)
+		}
 	})
+
+	if (conf.SIPProxydExtEnabled) {
+		// dedicated endpoint for per-service-provider metrics
+		http.HandleFunc("/metrics-extended", func(httpResponse http.ResponseWriter, req *http.Request) {
+			metricSet = metrics.NewSet()
+			var wg sync.WaitGroup
+
+			if conf.SIPProxydEnabled {
+				wg.Add(2)
+				go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydSPCountersURL, &wg)
+				go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydClSPCountersURL, &wg)
+			}
+
+			wg.Wait()
+			metricSet.WritePrometheus(httpResponse)
+		})
+	}
 
 	// logInfo(fmt.Printf("Starting c5exporter v%s on port %s", version, conf.ListenAddress))
 	logInfo("Starting c5exporter version", version, "on", conf.ListenAddress)
@@ -846,6 +866,9 @@ func logConfig() {
 	if conf.SIPProxydEnabled {
 		logInfo("sipproxyd enabled with url", conf.SIPProxydURL)
 	}
+	if conf.SIPProxydExtEnabled {
+		logInfo("sipproxyd extension enabled with url", conf.SIPProxydSPCountersURL)
+	}
 	if conf.ACDQueuedEnabled {
 		logInfo("acdqueued enabled with url", conf.ACDQueuedURL)
 	}
@@ -867,5 +890,8 @@ func logConfig() {
 		logInfo("xms enabled with user", conf.XmsUser)
 		logInfo("- counters url:", conf.XmsCountersURL)
 		logInfo("- licenses url:", conf.XmsLicensesURL)
+	}
+	if conf.GoCollectorEnabled {
+		logDebug("GoCollector and Process metrics enabled")
 	}
 }
