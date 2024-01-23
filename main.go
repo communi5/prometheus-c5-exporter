@@ -27,7 +27,8 @@ var metricsMtx sync.Mutex
 var metricSet *metrics.Set
 
 // Fix missing cmpGrp label when C5 component is shutdown
-var gAttrs []MetricAttribute
+var gCmpGrp map[string]MetricAttribute
+var gDc  map[string]MetricAttribute
 
 type eventCounter struct {
 	ID    string
@@ -558,13 +559,31 @@ func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttr
 	setMetricValue(buildMetricName(prefix, `memory_max_used_percent`, attrs), memMaxUsage)
 }
 
+func getGlobalAttrs(prefix string) []MetricAttribute {
+	var tmpAttrs []MetricAttribute
+	tmpAttrs = append(tmpAttrs, gCmpGrp[prefix])
+	tmpAttrs = append(tmpAttrs, gDc[prefix])
+	return tmpAttrs
+}
+
+func setGlobalAttrs(prefix string, cmpGrp string, dc string) {
+	if gCmpGrp == nil {
+		gCmpGrp = make(map[string]MetricAttribute)
+	}
+	if gDc == nil {
+		gDc = make(map[string]MetricAttribute)
+	}
+	gCmpGrp[prefix] = MetricAttribute{"cmpGrp", cmpGrp}
+	gDc[prefix] = MetricAttribute{"dc", dc}
+}
+
 func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	client := http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		setMetricValue(buildMetricName(prefix, "up", gAttrs), 0)
+		setMetricValue(buildMetricName(prefix, "up", getGlobalAttrs(prefix)), 0)
 		return
 	}
 	defer resp.Body.Close()
@@ -580,7 +599,7 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	dc, cmpGrp := parseClusterInfo(c5state.ClusterInfo)
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
 	setMetricValue(buildMetricName(prefix, "up", attrs), 1)
-	gAttrs = attrs
+	setGlobalAttrs(prefix, cmpGrp, dc)
 
 	// process base information
 	processBaseMetrics(prefix, c5state, attrs)
@@ -595,7 +614,7 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		setMetricValue(buildMetricName(prefix, "up", gAttrs), 0)
+		setMetricValue(buildMetricName(prefix, "up", getGlobalAttrs(prefix)), 0)
 		return
 	}
 	defer resp.Body.Close()
@@ -611,7 +630,7 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	dc, cmpGrp := parseClusterInfo(c5Resp.ClusterInfo)
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
 	setMetricValue(buildMetricName(prefix, "up", attrs), 1)
-	gAttrs = attrs
+	setGlobalAttrs(prefix, cmpGrp, dc)
 
 	// process event and usage counters now
 	processC5CounterMetrics(prefix, c5Resp, attrs)
