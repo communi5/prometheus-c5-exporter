@@ -15,7 +15,7 @@ builds:
     goarch:
       - amd64
 archives:
-  - replacements:
+  #  replacements:
       # linux: Linux
       # windows: Windows
       # amd64: x86_64
