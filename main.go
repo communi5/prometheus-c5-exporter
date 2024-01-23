@@ -20,11 +20,14 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.0"
+const version = "1.2.1"
 
 // Global metric set
 var metricsMtx sync.Mutex
 var metricSet *metrics.Set
+
+// Fix missing cmpGrp label when C5 component is shutdown
+var gAttrs []MetricAttribute
 
 type eventCounter struct {
 	ID    string
@@ -561,11 +564,10 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		setMetricValue(prefix+"_up", 0)
+		setMetricValue(buildMetricName(prefix, "up", gAttrs), 0)
 		return
 	}
 	defer resp.Body.Close()
-	setMetricValue(prefix+"_up", 1)
 
 	var c5state c5StateResponse
 	// logDebug("Parsing response body", resp.Body)
@@ -577,6 +579,8 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 
 	dc, cmpGrp := parseClusterInfo(c5state.ClusterInfo)
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
+	setMetricValue(buildMetricName(prefix, "up", attrs), 1)
+	gAttrs = attrs
 
 	// process base information
 	processBaseMetrics(prefix, c5state, attrs)
@@ -591,11 +595,10 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	resp, err := client.Get(url)
 	if err != nil {
 		logError("Failed to connect", err)
-		setMetricValue(prefix+"_up", 0)
+		setMetricValue(buildMetricName(prefix, "up", gAttrs), 0)
 		return
 	}
 	defer resp.Body.Close()
-	setMetricValue(prefix+"_up", 1)
 
 	var c5Resp c5CounterResponse
 	// logDebug("Parsing response body", resp.Body)
@@ -607,6 +610,8 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 
 	dc, cmpGrp := parseClusterInfo(c5Resp.ClusterInfo)
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
+	setMetricValue(buildMetricName(prefix, "up", attrs), 1)
+	gAttrs = attrs
 
 	// process event and usage counters now
 	processC5CounterMetrics(prefix, c5Resp, attrs)
