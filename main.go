@@ -97,11 +97,15 @@ func buildMetricName(prefix string, name string, attrs []MetricAttribute) string
 	if len(attrs) > 0 {
 		labels := string("{")
 		for _, v := range attrs {
-			labels += v.name + string(`="`) + v.value + `",`
+			if (len(v.name) > 0 && len(v.value) > 0) {
+				labels += v.name + string(`="`) + v.value + `",`
+			}
 		}
 		labels = strings.TrimRight(labels, ",")
 		labels = labels + string("}")
-		name = name + labels
+		if len(labels) > 2 { // {}
+			name = name + labels
+		}
 	}
 	return name
 }
