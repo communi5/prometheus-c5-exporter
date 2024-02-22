@@ -59,6 +59,10 @@ func fetchServiceProviderCounters(prefix, url string, wg *sync.WaitGroup) {
 	re := regexp.MustCompile(`serviceProviderName: ([^"]+)`)
 
 	var clusterInfo = counters["clusterInfo"]
+	if clusterInfo == nil {
+		logError("Failed to get cluster info")
+		return
+	}
 	dc, cmpGrp := parseClusterInfo(clusterInfo.(string))
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
 
