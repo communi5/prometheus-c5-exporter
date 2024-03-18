@@ -572,8 +572,8 @@ func getGlobalAttrs(prefix string) []MetricAttribute {
 }
 
 func setGlobalAttrs(prefix string, cmpGrp string, dc string) {
-	metricsMtx.Lock()
-	defer metricsMtx.Unlock()
+	attributesMtx.Lock()
+	defer attributesMtx.Unlock()
 
 	if gCmpGrp == nil {
 		gCmpGrp = make(map[string]MetricAttribute)
