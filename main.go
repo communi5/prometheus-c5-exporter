@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.1"
+const version = "1.2.3"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -29,6 +29,7 @@ var metricSet *metrics.Set
 // Fix missing cmpGrp label when C5 component is shutdown
 var gCmpGrp map[string]MetricAttribute
 var gDc  map[string]MetricAttribute
+var attributesMtx sync.Mutex
 
 type eventCounter struct {
 	ID    string
@@ -571,6 +572,9 @@ func getGlobalAttrs(prefix string) []MetricAttribute {
 }
 
 func setGlobalAttrs(prefix string, cmpGrp string, dc string) {
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
+
 	if gCmpGrp == nil {
 		gCmpGrp = make(map[string]MetricAttribute)
 	}
