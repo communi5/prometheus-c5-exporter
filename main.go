@@ -28,7 +28,7 @@ var metricSet *metrics.Set
 
 // Fix missing cmpGrp label when C5 component is shutdown
 var gCmpGrp map[string]MetricAttribute
-var gDc  map[string]MetricAttribute
+var gDc map[string]MetricAttribute
 
 type eventCounter struct {
 	ID    string
@@ -97,7 +97,7 @@ func buildMetricName(prefix string, name string, attrs []MetricAttribute) string
 	if len(attrs) > 0 {
 		labels := string("{")
 		for _, v := range attrs {
-			if (len(v.name) > 0 && len(v.value) > 0) {
+			if len(v.name) > 0 && len(v.value) > 0 {
 				labels += v.name + string(`="`) + v.value + `",`
 			}
 		}
@@ -571,6 +571,9 @@ func getGlobalAttrs(prefix string) []MetricAttribute {
 }
 
 func setGlobalAttrs(prefix string, cmpGrp string, dc string) {
+	// Reusing existing metricsMtx to synchronize writes to map
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
 	if gCmpGrp == nil {
 		gCmpGrp = make(map[string]MetricAttribute)
 	}
@@ -852,7 +855,7 @@ func main() {
 		}
 	})
 
-	if (conf.SIPProxydExtEnabled) {
+	if conf.SIPProxydExtEnabled {
 		// dedicated endpoint for per-service-provider metrics
 		http.HandleFunc("/metrics-extended", func(httpResponse http.ResponseWriter, req *http.Request) {
 			metricSet = metrics.NewSet()
