@@ -12,11 +12,11 @@ import (
 )
 
 func parseServiceProviderCounter(line string, id string) usageCounter {
-/*
-	"name                             current    min    max   lMin   lMax   lAvg      total",
-    "BT_ACTIVE_CALLS                       0      0      0      0      0      0          0",
-    "CENTREX_ACTIVE_CALLS                  0      0      0      0      0      0          0",
-*/
+	/*
+	   	"name                             current    min    max   lMin   lMax   lAvg      total",
+	       "BT_ACTIVE_CALLS                       0      0      0      0      0      0          0",
+	       "CENTREX_ACTIVE_CALLS                  0      0      0      0      0      0          0",
+	*/
 	parts := strings.Fields(line)
 	if len(parts) < 8 {
 		return usageCounter{}
@@ -67,14 +67,14 @@ func fetchServiceProviderCounters(prefix, url string, wg *sync.WaitGroup) {
 	attrs := []MetricAttribute{{"dc", dc}, {"cmpGrp", cmpGrp}}
 
 	for key, value := range counters {
-		if (strings.HasPrefix(key, "spCounterTable")) {
+		if strings.HasPrefix(key, "spCounterTable") {
 			matches := re.FindStringSubmatch(key)
 			if len(matches) > 1 {
 				serviceProvider := matches[1]
 
-				for i := range value.([]interface {}) {
-					line := value.([]interface {})[i].(string)
-					if (!strings.HasPrefix(line, "name")) {
+				for i := range value.([]interface{}) {
+					line := value.([]interface{})[i].(string)
+					if !strings.HasPrefix(line, "name") {
 						ctr := parseServiceProviderCounter(line, serviceProvider)
 						setUsageMetric(prefix, ctr, append(attrs, MetricAttribute{"sp", serviceProvider}))
 					}

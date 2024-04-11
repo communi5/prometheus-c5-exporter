@@ -28,7 +28,7 @@ var metricSet *metrics.Set
 
 // Fix missing cmpGrp label when C5 component is shutdown
 var gCmpGrp map[string]MetricAttribute
-var gDc  map[string]MetricAttribute
+var gDc map[string]MetricAttribute
 var attributesMtx sync.Mutex
 
 type eventCounter struct {
@@ -98,7 +98,7 @@ func buildMetricName(prefix string, name string, attrs []MetricAttribute) string
 	if len(attrs) > 0 {
 		labels := string("{")
 		for _, v := range attrs {
-			if (len(v.name) > 0 && len(v.value) > 0) {
+			if len(v.name) > 0 && len(v.value) > 0 {
 				labels += v.name + string(`="`) + v.value + `",`
 			}
 		}
@@ -484,21 +484,21 @@ func processC5StateCounter(prefix string, lines []interface{}, attrs []MetricAtt
 // processC5CounterMetrics will parse a counter output of type EVENT and USAGE for
 // a specific C5 metric.
 //
-// {
-//   "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
-//   "clusterInfo" : "DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)",
-//   "counterName" : "BT_CALLS_LIMIT_REACHED",
-//   "counterType" : "EVENT",
-//   "absoluteValue" : 0,
-//   "currentValue" : 0,
-//   "lastValue" : 0,
-//   "tableValues" : [
-//     "name                            absolute   curr   last",
-//     "trunkname1.ipcentrex.internal         0      0      0",
-//     "trunk2.otherprovider.at               0      0      0",
-//   ],
-//   "tableCountInfo" : "curComponentCount2: 14 (10000) "
-// }
+//	{
+//	  "proxyResponseTimeStampAndState:" : "2021-02-25 10:31:48  active",
+//	  "clusterInfo" : "DC=1 {Wien} CompGrpId=31 [VAS-1] (masterId=8)",
+//	  "counterName" : "BT_CALLS_LIMIT_REACHED",
+//	  "counterType" : "EVENT",
+//	  "absoluteValue" : 0,
+//	  "currentValue" : 0,
+//	  "lastValue" : 0,
+//	  "tableValues" : [
+//	    "name                            absolute   curr   last",
+//	    "trunkname1.ipcentrex.internal         0      0      0",
+//	    "trunk2.otherprovider.at               0      0      0",
+//	  ],
+//	  "tableCountInfo" : "curComponentCount2: 14 (10000) "
+//	}
 func processC5CounterMetrics(basePrefix string, data c5CounterResponse, attrs []MetricAttribute) {
 	const event, usage string = "EVENT", "USAGE"
 	prefix := basePrefix + "_" + strings.ToLower(data.CounterName)
@@ -856,7 +856,7 @@ func main() {
 		}
 	})
 
-	if (conf.SIPProxydExtEnabled) {
+	if conf.SIPProxydExtEnabled {
 		// dedicated endpoint for per-service-provider metrics
 		http.HandleFunc("/metrics-extended", func(httpResponse http.ResponseWriter, req *http.Request) {
 			metricSet = metrics.NewSet()
