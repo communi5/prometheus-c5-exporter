@@ -550,6 +550,7 @@ func processBaseMetrics(prefix string, state c5StateResponse, attrs []MetricAttr
 	}
 	tmp := append(attrs, MetricAttribute{"version", version})
 	tmp = append(tmp, MetricAttribute{"starttime", startupTime})
+	tmp = append(tmp, MetricAttribute{"state", strings.TrimSpace(strings.Join([]string{state.ProxyState, state.QueueState, state.RegistrarState, state.NotificationServerState, state.CstaState}, " "))})
 	logInfo("Processed", prefix, tmp)
 	setMetricValue(buildMetricName(prefix, `info`, tmp), 1)
 
