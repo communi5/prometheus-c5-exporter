@@ -326,7 +326,7 @@ func parseUsageCounter(line string) usageCounter {
 	}
 }
 
-func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
+func parseSubUsageCounter(prefix string, lines []string) (cnts []usageCounter) {
 	// [
 	//   " 84 TRANSACTION_AND_TU_TU_MANAGER_QUEUE_SIZE          0      0      3      0      9      0",
 	//   "                                                      0      0      3      0      4      0",
@@ -339,7 +339,7 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 		if i == 0 {
 			c := parseUsageCounter(line)
 			if c.Name == "" {
-				logError("Failed to parse as sub usage counter header:", line)
+				logError(prefix, "> failed to parse as sub usage counter header:", line)
 				return
 			}
 			c.Idx = &idx
@@ -349,7 +349,7 @@ func parseSubUsageCounter(lines []string) (cnts []usageCounter) {
 		} else {
 			parts := strings.Fields(line)
 			if len(parts) < 6 {
-				logError("Failed to parse as sub usage counter:", line)
+				logError(prefix, "> failed to parse as sub usage counter:", line)
 				continue
 			}
 			cnts = append(cnts,
@@ -383,7 +383,7 @@ func parseEventCounter(line string) eventCounter {
 	}
 }
 
-func parseSubEventCounter(lines []string) (cnts []eventCounter) {
+func parseSubEventCounter(prefix string, lines []string) (cnts []eventCounter) {
 	// [
 	//   "425 CASS_ERR_CONN_TMO                                  0      0      0",
 	//   "                                                     131    386    518"
@@ -396,7 +396,7 @@ func parseSubEventCounter(lines []string) (cnts []eventCounter) {
 		if i == 0 {
 			c := parseEventCounter(line)
 			if c.Name == "" {
-				logError("Failed to parse as sub event counter header:", line)
+				logError(prefix, "> failed to parse as sub event counter header:", line)
 				return
 			}
 			c.Idx = &idx
@@ -406,7 +406,7 @@ func parseSubEventCounter(lines []string) (cnts []eventCounter) {
 		} else {
 			parts := strings.Fields(line)
 			if len(parts) < 1 {
-				logError("Failed to parse as sub event counter:", line)
+				logError(prefix, "> failed to parse as sub event counter:", line)
 				return
 			}
 			cnts = append(cnts,
@@ -433,7 +433,7 @@ func processC5StateCounter(prefix string, lines []interface{}, attrs []MetricAtt
 				sublines[i] = v.Index(i).Elem().String()
 			}
 			if cntType == usage {
-				cnts := parseSubUsageCounter(sublines)
+				cnts := parseSubUsageCounter(prefix, sublines)
 				for _, c := range cnts {
 					setUsageMetric(prefix, c, attrs)
 				}
@@ -444,7 +444,7 @@ func processC5StateCounter(prefix string, lines []interface{}, attrs []MetricAtt
 					logDebug("Ignore invalid event sublines for cstagwd", sublines)
 					continue
 				}
-				cnts := parseSubEventCounter(sublines)
+				cnts := parseSubEventCounter(prefix, sublines)
 				for _, c := range cnts {
 					setCounterMetric(prefix, c, attrs)
 				}
