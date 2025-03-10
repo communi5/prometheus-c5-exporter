@@ -10,10 +10,13 @@ type AppConfiguration struct {
 
 	// XMS Configuration
 	XmsEnabled     bool
+	XmsV2Enabled   bool
 	XmsUser        string `default:"admin"`
 	XmsPwd         string `default:"admin"`
 	XmsCountersURL string `default:"http://localhost:10080/resource/counters"`
 	XmsLicensesURL string `default:"http://localhost:10080/resource/licenses"`
+	Xmsv2LicensesURL string `default:"http://localhost:8080/v2/license/stats"`
+	Xmsv2CountersURL string `default:"http://localhost:8080/v2/sessions"`
 
 	// C5 Configuration
 	SIPProxydEnabled        bool

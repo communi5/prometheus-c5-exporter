@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.4"
+const version = "1.2.5"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -822,6 +822,12 @@ func main() {
 			go fetchXmsMetrics("xms_counter", conf.XmsCountersURL, conf.XmsUser, conf.XmsPwd, &wg)
 			go fetchXmsMetrics("xms_license", conf.XmsLicensesURL, conf.XmsUser, conf.XmsPwd, &wg)
 		}
+		// --- XMS 5.2 (API v2)
+		if conf.XmsV2Enabled {
+			wg.Add(2)
+			go fetchXmsV2Metrics("xms_counter", conf.Xmsv2CountersURL, conf.XmsUser, conf.XmsPwd, &wg)
+			go fetchXmsV2Metrics("xms_license", conf.Xmsv2LicensesURL, conf.XmsUser, conf.XmsPwd, &wg)
+		}
 		// --- C5 Metrics
 		if conf.SIPProxydEnabled {
 			wg.Add(1)
@@ -926,6 +932,11 @@ func logConfig() {
 		logInfo("xms enabled with user", conf.XmsUser)
 		logInfo("- counters url:", conf.XmsCountersURL)
 		logInfo("- licenses url:", conf.XmsLicensesURL)
+	}
+	if conf.XmsV2Enabled {
+		logInfo("xms v2 enabled with user", conf.XmsUser)
+		logInfo("- counters url:", conf.Xmsv2CountersURL)
+		logInfo("- licenses url:", conf.Xmsv2LicensesURL)
 	}
 	if conf.GoCollectorEnabled {
 		logDebug("GoCollector and Process metrics enabled")

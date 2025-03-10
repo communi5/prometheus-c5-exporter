@@ -31,10 +31,13 @@ notificationEnabled = true
 
 ### 3rd party XMS
 xmsEnabled = false
+xmsV2Enabled = false
 #xmsUser = "admin"
 #xmsPwd = "admin"
 #xmsCountersURL = "http://localhost:10080/resource/counters"
 #xmsLicensesURL = "http://localhost:10080/resource/licenses"
+#xmsv2LicensesURL = "http://localhost:10080/v2/license/stats"
+#xmsv2CountersURL = "http://localhost:10080/v2/sessions"
 
 ### Enable monitoring of the exporter itself (go_memstats_...)
 goCollectorEnabled = false
