@@ -14,13 +14,6 @@ builds:
       # - darwin
     goarch:
       - amd64
-archives:
-  #  replacements:
-      # linux: Linux
-      # windows: Windows
-      # amd64: x86_64
-    #files:
-    #  - README.md
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -43,7 +36,7 @@ nfpms:
 
     vendor: Communi5 Technologies GmbH
     homepage: https://github.com/communi5/prometheus-c5-exporter/
-    maintainer: Robert Traussnig<r.traussnig@communi5.com>
+    maintainer: Robert Traussnig <r.traussnig@communi5.com>
     description: A prometheus exporter for C5 application processes
     license: Commercial
 
@@ -60,30 +53,30 @@ nfpms:
     bindir: /usr/bin
 
     contents:
-    - src: "resources/prometheus-c5-exporter.service" 
-      dst: "/usr/lib/systemd/system/prometheus-c5-exporter.service"
-    - src: "resources/prometheus-c5-exporter.initd" 
-      dst: "/etc/init.d/prometheus-c5-exporter"
-    - src: "README.md" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/README.md"
-    - src: "resources/rsyslog.d/prometheus-c5-exporter.conf" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
-    - src: "resources/logrotate.d/prometheus-c5-exporter.conf" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
-    - src: "resources/grafana/dashboard-c5-proxy-details.json" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-proxy-details.json"
-    - src: "resources/grafana/dashboard-c5-acd-details.json" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-acd-details.json"
-    - src: "resources/grafana/dashboard-c5-registrar-details.json" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-registrar-details.json"
-    - src: "resources/grafana/dashboard-c5-bt-details.json" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-details.json"
-    - src: "resources/grafana/dashboard-c5-bt-overview.json" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-overview.json"
-    - src: "prometheus-c5-exporter.conf.example" 
-      dst: "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
-    # Config files to add to your package. They are about the same as
-    # the files keyword, except package managers treat them differently
-    - src: "prometheus-c5-exporter.conf.example" 
-      dst: "/etc/prometheus-c5-exporter.conf"
-      type: config
+      - src: "resources/prometheus-c5-exporter.service"
+        dst: "/usr/lib/systemd/system/prometheus-c5-exporter.service"
+      - src: "resources/prometheus-c5-exporter.initd"
+        dst: "/etc/init.d/prometheus-c5-exporter"
+      - src: "README.md"
+        dst: "/usr/share/doc/prometheus-c5-exporter/README.md"
+      - src: "resources/rsyslog.d/prometheus-c5-exporter.conf"
+        dst: "/usr/share/doc/prometheus-c5-exporter/rsyslog.d/prometheus-c5-exporter.conf"
+      - src: "resources/logrotate.d/prometheus-c5-exporter.conf"
+        dst: "/usr/share/doc/prometheus-c5-exporter/logrotate.d/prometheus-c5-exporter.conf"
+      - src: "resources/grafana/dashboard-c5-proxy-details.json"
+        dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-proxy-details.json"
+      - src: "resources/grafana/dashboard-c5-acd-details.json"
+        dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-acd-details.json"
+      - src: "resources/grafana/dashboard-c5-registrar-details.json"
+        dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-registrar-details.json"
+      - src: "resources/grafana/dashboard-c5-bt-details.json"
+        dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-details.json"
+      - src: "resources/grafana/dashboard-c5-bt-overview.json"
+        dst: "/usr/share/doc/prometheus-c5-exporter/grafana/dashboard-c5-bt-overview.json"
+      - src: "prometheus-c5-exporter.conf.example"
+        dst: "/usr/share/doc/prometheus-c5-exporter/prometheus-c5-exporter.conf.example"
+      # Config files to add to your package. They are about the same as
+      # the files keyword, except package managers treat them differently
+      - src: "prometheus-c5-exporter.conf.example"
+        dst: "/etc/prometheus-c5-exporter.conf"
+        type: config|noreplace
