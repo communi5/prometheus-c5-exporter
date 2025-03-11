@@ -804,7 +804,7 @@ func main() {
 		conf.CstaEnabled = true
 	}
 
-	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.CstaEnabled || conf.XmsEnabled) {
+	if !(conf.SIPProxydEnabled || conf.SIPProxydTrunksEnabled || conf.ACDQueuedEnabled || conf.RegistrardEnabled || conf.NotificationEnabled || conf.CstaEnabled || conf.XmsEnabled || conf.XmsV2Enabled) {
 		logError("No c5 or XMS processes enabled to query. Please enable at least on process in configuration.")
 		log.Fatal("Aborting.")
 	}
