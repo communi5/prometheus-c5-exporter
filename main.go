@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.5"
+const version = "1.2.6"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -867,18 +867,22 @@ func main() {
 	})
 
 	if conf.SIPProxydExtEnabled {
-		// dedicated endpoint for per-service-provider metrics
+		// dedicated endpoint for per-service-provider metrics and BT details
 		http.HandleFunc("/metrics-extended", func(httpResponse http.ResponseWriter, req *http.Request) {
 			metricSet = metrics.NewSet()
 			var wg sync.WaitGroup
 
-			if conf.SIPProxydEnabled {
-				wg.Add(2)
-				go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydSPCountersURL, &wg)
-				go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydClSPCountersURL, &wg)
-			}
+			wg.Add(2)
+			go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydSPCountersURL, &wg)
+			go fetchServiceProviderCounters("sipproxyd", conf.SIPProxydClSPCountersURL, &wg)
 
+			wg.Add(1)
+			go fetchC5CounterMetrics("sipproxyd", conf.SIPProxydTrunkStatsURL, &wg)
 			wg.Wait()
+			wg.Add(1)
+			go fetchC5CounterMetrics("sipproxyd", conf.SIPProxydTrunkLimitsURL, &wg)
+			wg.Wait()
+
 			metricSet.WritePrometheus(httpResponse)
 		})
 	}
