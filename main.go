@@ -49,6 +49,8 @@ type usageCounter struct {
 	Min     uint64
 	Max     uint64
 	Total   uint64
+	LoginName string
+	Descr   string
 }
 
 type c5StateResponse struct {
@@ -144,6 +146,13 @@ func setLabeledUsageMetric(prefix string, label string, metric usageCounter, att
 	//logDebug("set labeled usage metric for ", prefix, metric.Name)
 	attrs = append(attrs, MetricAttribute{label, metric.Name})
 	appendIndex(metric.Idx, &attrs)
+
+	if len(metric.LoginName) > 0 {
+		attrs = append(attrs, MetricAttribute{"loginName", metric.LoginName})
+	}
+	if len(metric.Descr) > 0 {
+		attrs = append(attrs, MetricAttribute{"descr", metric.Descr})
+	}
 
 	current := buildMetricName(prefix, `current`, attrs)
 	setMetricValue(current, metric.Current)
@@ -314,7 +323,8 @@ func parseUsageCounter(line string) usageCounter {
 	if len(parts) < 8 {
 		return usageCounter{}
 	}
-	return usageCounter{
+
+	res := usageCounter{
 		ID:      parts[0],
 		Name:    normalizeMetricName(parts[1]),
 		Current: parseUint64(parts[2]),
@@ -324,6 +334,20 @@ func parseUsageCounter(line string) usageCounter {
 		LastMax: parseUint64(parts[6]),
 		LastAvg: parseUint64(parts[7]),
 	}
+
+	if len(parts) > 11 {
+		// parts[8] = total
+		// parts[9] = compGrpCounter (yes/no)
+		// parts[10] = loginName
+		res.LoginName = parts[10]
+
+		// parts[11+] = description
+		for i := 11; i < len(parts); i++ {
+			res.Descr += parts[i] + " "
+		}
+	}
+
+	return res
 }
 
 func parseSubUsageCounter(prefix string, lines []string) (cnts []usageCounter) {
