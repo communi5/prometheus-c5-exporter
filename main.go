@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.7"
+const version = "1.2.8"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -620,6 +620,7 @@ func fetchC5StateMetrics(prefix, url string, wg *sync.WaitGroup) {
 	if err != nil {
 		logError("Failed to connect", err)
 		setMetricValue(buildMetricName(prefix, "up", getGlobalAttrs(prefix)), 0)
+		setMetricValue(buildMetricName(prefix, "state", getGlobalAttrs(prefix)), 0)
 		return
 	}
 	defer resp.Body.Close()
@@ -651,6 +652,7 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	if err != nil {
 		logError("Failed to connect", err)
 		setMetricValue(buildMetricName(prefix, "up", getGlobalAttrs(prefix)), 0)
+		setMetricValue(buildMetricName(prefix, "state", getGlobalAttrs(prefix)), 0)
 		return
 	}
 	defer resp.Body.Close()
