@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.2.8"
+const version = "1.3.0"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -85,6 +85,21 @@ type c5CounterResponse struct {
 	LastAvgValue                   uint64        // "lastAvgValue" : 0, // counter only
 	TotalValue                     uint64        // "totalValue" : 0, // counter only
 	TableValues                    []interface{} // "counterInfos": [ ... ]
+}
+
+type c5MapListResponse struct {
+	ProxyResponseTimeStampAndState string   `json:"proxyResponseTimeStampAndState:"`
+	Maps                           []string `json:"maps"`
+}
+
+type c5MapDetailResponse struct {
+	ProxyResponseTimeStampAndState string `json:"proxyResponseTimeStampAndState:"`
+	CacheName                      string `json:"cache_name"`
+	CacheSizeEntries               uint64 `json:"cache_size_entries"`
+	CacheSizeBytes                 uint64 `json:"cache_size_bytes"`
+	CacheHits                      uint64 `json:"cache_hits"`
+	CacheMisses                    uint64 `json:"cache_misses"`
+	CacheHitRatioPercent           uint64 `json:"cache_hit_ratio_percent"`
 }
 
 type MetricAttribute struct {
@@ -674,6 +689,56 @@ func fetchC5CounterMetrics(prefix, url string, wg *sync.WaitGroup) {
 	processC5CounterMetrics(prefix, c5Resp, attrs)
 }
 
+func fetchC5HazelcastMetrics(prefix, baseURL string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	client := http.Client{Timeout: 2 * time.Second}
+
+	// 1) fetch list of maps
+	listURL := baseURL + "?95&0"
+	resp, err := client.Get(listURL)
+	if err != nil {
+		logError("Failed to fetch map list:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var listResp c5MapListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+		logError("Failed to decode map list:", err)
+		return
+	}
+
+	attrsBase := getGlobalAttrs(prefix)
+
+	// 2) fetch details for each map
+	for _, mapName := range listResp.Maps {
+		detailURL := baseURL + "?92&31&" + mapName
+
+		resp, err := client.Get(detailURL)
+		if err != nil {
+			logError("Failed to fetch map detail for", mapName, ":", err)
+			continue
+		}
+
+		var detail c5MapDetailResponse
+		if err := json.NewDecoder(resp.Body).Decode(&detail); err != nil {
+			logError("Failed to decode map detail for", mapName, ":", err)
+			resp.Body.Close()
+			continue
+		}
+		resp.Body.Close()
+
+		attrs := append(attrsBase, MetricAttribute{"map", detail.CacheName})
+
+		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "size_entries", attrs), detail.CacheSizeEntries)
+		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "size_bytes", attrs), detail.CacheSizeBytes)
+		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "hits", attrs), detail.CacheHits)
+		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "misses", attrs), detail.CacheMisses)
+		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "hit_ratio_percent", attrs), detail.CacheHitRatioPercent)
+	}
+}
+
 // ---------------------------- XML struct For XMS REST API
 
 type WebService struct {
@@ -856,20 +921,24 @@ func main() {
 		}
 		// --- C5 Metrics
 		if conf.SIPProxydEnabled {
-			wg.Add(1)
+			wg.Add(2)
 			go fetchC5StateMetrics("sipproxyd", conf.SIPProxydURL, &wg)
+			go fetchC5HazelcastMetrics("sipproxyd", conf.SIPProxydBaseURL, &wg)
 		}
 		if conf.ACDQueuedEnabled {
-			wg.Add(1)
+			wg.Add(2)
 			go fetchC5StateMetrics("acdqueued", conf.ACDQueuedURL, &wg)
+			go fetchC5HazelcastMetrics("acdqueued", conf.ACDQueuedBaseURL, &wg)
 		}
 		if conf.RegistrardEnabled {
-			wg.Add(1)
+			wg.Add(2)
 			go fetchC5StateMetrics("registrard", conf.RegistrardURL, &wg)
+			go fetchC5HazelcastMetrics("registrard", conf.RegistrardBaseURL, &wg)
 		}
 		if conf.NotificationEnabled {
-			wg.Add(1)
+			wg.Add(2)
 			go fetchC5StateMetrics("notification", conf.NotificationURL, &wg)
+			go fetchC5HazelcastMetrics("notification", conf.NotificationBaseURL, &wg)
 		}
 		if conf.CstaEnabled {
 			wg.Add(1)

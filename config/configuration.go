@@ -35,6 +35,10 @@ type AppConfiguration struct {
 	NotificationURL         string `default:"http://127.0.0.1:9988/c5/proxy/commands?49&1&-v"`
 	CstaEnabled             bool
 	CstaURL                 string `default:"http://127.0.0.1:9986/c5/proxy/commands?49&1&-v"`
+	SIPProxydBaseURL		string `default:"http://127.0.0.1:9980/c5/proxy/commands"`
+	ACDQueuedBaseURL		string `default:"http://127.0.0.1:9982/c5/proxy/commands"`
+	RegistrardBaseURL		string `default:"http://127.0.0.1:9984/c5/proxy/commands"`
+	NotificationBaseURL		string `default:"http://127.0.0.1:9988/c5/proxy/commands"`
 
 	// Misc
 	GoCollectorEnabled      bool
