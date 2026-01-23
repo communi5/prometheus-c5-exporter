@@ -20,7 +20,7 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-const version = "1.3.0"
+const version = "1.3.1"
 
 // Global metric set
 var metricsMtx sync.Mutex
@@ -99,7 +99,7 @@ type c5MapDetailResponse struct {
 	CacheSizeBytes                 uint64 `json:"cache_size_bytes"`
 	CacheHits                      uint64 `json:"cache_hits"`
 	CacheMisses                    uint64 `json:"cache_misses"`
-	CacheHitRatioPercent           uint64 `json:"cache_hit_ratio_percent"`
+	CacheHitRatioPercent           float64 `json:"cache_hit_ratio_percent"`
 }
 
 type MetricAttribute struct {
@@ -204,6 +204,12 @@ func setMetricValue(name string, value uint64) {
 	metricsMtx.Lock()
 	defer metricsMtx.Unlock()
 	metricSet.GetOrCreateCounter(name).Set(value)
+}
+
+func setFloatMetricValue(name string, value float64) {
+	metricsMtx.Lock()
+	defer metricsMtx.Unlock()
+	metricSet.GetOrCreateFloatCounter(name).Set(value)
 }
 
 func setMetricValueFloat(name string, value float64) {
@@ -735,7 +741,7 @@ func fetchC5HazelcastMetrics(prefix, baseURL string, wg *sync.WaitGroup) {
 		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "size_bytes", attrs), detail.CacheSizeBytes)
 		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "hits", attrs), detail.CacheHits)
 		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "misses", attrs), detail.CacheMisses)
-		setMetricValue(buildMetricName(prefix+"_hazelcast_cache", "hit_ratio_percent", attrs), detail.CacheHitRatioPercent)
+		setFloatMetricValue(buildMetricName(prefix+"_hazelcast_cache", "hit_ratio_percent", attrs), detail.CacheHitRatioPercent)
 	}
 }
 
