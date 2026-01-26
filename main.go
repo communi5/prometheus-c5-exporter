@@ -219,12 +219,18 @@ func setMetricValueFloat(name string, value float64) {
 }
 
 func parseInt64(str string) int64 {
-	// logDebug("Attempting to parse string as int64: '%s'", str)
-	i64, err := strconv.ParseInt(str, 10, 63)
+	i, err := strconv.ParseInt(str, 10, 64)
+	if err == nil {
+		return i
+	}
+
+	// Fallback: try parsing as float (handle scientific notation e.g. 1.15653e+06)
+	f, err := strconv.ParseFloat(str, 64)
 	if err != nil {
 		log.Fatal("Failed to parse as int64:", str)
 	}
-	return i64
+
+	return int64(f) // truncate
 }
 
 func parseUint64(str string) uint64 {
